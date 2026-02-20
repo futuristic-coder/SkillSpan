@@ -5,7 +5,8 @@ import {serve} from "inngest/express"; // Import the Inngest Express middleware
 
 import { ENV } from './config/env.js';
 import { connectDB } from './config/db.js';
-import { inngest } from './config/inngest.js';
+import { inngest,functions } from './config/inngest.js';
+
 
 const app = express();
 
