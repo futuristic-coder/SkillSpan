@@ -3,6 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { Navigate, Route, Routes } from "react-router";
 import HomePage from "./pages/HomePage";
 import ProblemsPage from "./pages/ProblemsPage";
+import ProblemPage from "./pages/ProblemPage";
 import { Toaster } from "react-hot-toast";
 import DashboardPage from "./pages/DashboardPage";
 
@@ -38,6 +39,12 @@ function App() {
           path="/problems"
           element={
             isSignedIn ? <ProblemsPage isDark={isDark} setIsDark={setIsDark} /> : <Navigate to={"/"} />
+          }
+        />
+        <Route
+          path="/problem/:id"
+          element={
+            isSignedIn ? <ProblemPage isDark={isDark} setIsDark={setIsDark} /> : <Navigate to={"/"} />
           }
         />
       </Routes>
