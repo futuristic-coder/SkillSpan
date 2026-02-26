@@ -50,12 +50,15 @@ function DashboardPage({ isDark, setIsDark }) {
   return (
     <>
       <div className={isDark ? "min-h-screen bg-slate-950 text-slate-100" : "min-h-screen bg-slate-100 text-slate-900"}>
+        <div className="pointer-events-none fixed inset-0 -z-10">
+          <div className={isDark ? "absolute -top-44 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" : "absolute -top-44 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-300/40 blur-3xl"} />
+          <div className={isDark ? "absolute bottom-0 right-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" : "absolute bottom-0 right-0 h-72 w-72 rounded-full bg-cyan-300/40 blur-3xl"} />
+        </div>
         <Navbar isDark={isDark} setIsDark={setIsDark} />
-        <WelcomeSection isDark={isDark} onCreateSession={() => setShowCreateModal(true)} />
+        <main className="mx-auto w-full max-w-7xl px-4 pb-10 pt-4 sm:px-6 lg:px-8">
+          <WelcomeSection isDark={isDark} onCreateSession={() => setShowCreateModal(true)} />
 
-        {/* Grid layout */}
-        <div className="container mx-auto px-4 pb-16 sm:px-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5">
             <StatsCards
               isDark={isDark}
               activeSessionsCount={activeSessions.length}
@@ -70,7 +73,7 @@ function DashboardPage({ isDark, setIsDark }) {
           </div>
 
           <RecentSessions isDark={isDark} sessions={recentSessions} isLoading={loadingRecentSessions} />
-        </div>
+        </main>
       </div>
 
       <CreateSessionModal

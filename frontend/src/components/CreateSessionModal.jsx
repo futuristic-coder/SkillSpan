@@ -27,8 +27,8 @@ function CreateSessionModal({
       <div
         className={
           isDark
-            ? "relative z-10 w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-2xl"
-            : "relative z-10 w-full max-w-2xl rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl"
+            ? "relative z-10 w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-900/95 p-6 shadow-[0_20px_60px_-25px_rgba(79,70,229,0.45)] backdrop-blur-sm"
+            : "relative z-10 w-full max-w-2xl rounded-2xl border border-slate-300 bg-white/95 p-6 shadow-xl backdrop-blur-sm"
         }
       >
         <h3 className={isDark ? "mb-6 text-2xl font-bold text-white" : "mb-6 text-2xl font-bold text-slate-900"}>
@@ -99,8 +99,8 @@ function CreateSessionModal({
           <button
             className={
               isDark
-                ? "rounded-xl border border-white/15 bg-white/5 px-4 py-2 font-medium text-slate-200 transition hover:bg-white/10"
-                : "rounded-xl border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 transition hover:bg-slate-100"
+                ? "rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
             }
             onClick={onClose}
           >
@@ -108,7 +108,7 @@ function CreateSessionModal({
           </button>
 
           <button
-            className="inline-flex items-center gap-2 rounded-xl border border-indigo-500 bg-indigo-500 px-4 py-2 font-semibold text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl border border-indigo-500 bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:-translate-y-0.5 hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
             onClick={onCreateRoom}
             disabled={isCreating || !roomConfig.problem}
           >

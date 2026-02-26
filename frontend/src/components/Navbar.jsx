@@ -15,7 +15,7 @@ function Navbar({ isDark, setIsDark }) {
           : "sticky top-0 z-50 border-b border-slate-300/90 bg-white/85 backdrop-blur-xl"
       }
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-2 lg:px-8">
         {/* LOGO */}
         <Link
           to="/"
@@ -26,8 +26,8 @@ function Navbar({ isDark, setIsDark }) {
             alt="Logo"
             className={
               isDark
-                ? "h-10 w-10 rounded-xl ring-1 ring-white/10 transform-gpu transition-all duration-300 ease-out group-hover:ring-indigo-300/40 group-hover:shadow-lg group-hover:shadow-indigo-500/30"
-                : "h-10 w-10 rounded-xl ring-1 ring-slate-300 transform-gpu transition-all duration-300 ease-out group-hover:ring-indigo-500/40 group-hover:shadow-lg group-hover:shadow-indigo-500/20"
+                ? "h-9 w-9 rounded-xl ring-1 ring-white/10 transform-gpu transition-all duration-300 ease-out group-hover:ring-indigo-300/40 group-hover:shadow-lg group-hover:shadow-indigo-500/30"
+                : "h-9 w-9 rounded-xl ring-1 ring-slate-300 transform-gpu transition-all duration-300 ease-out group-hover:ring-indigo-500/40 group-hover:shadow-lg group-hover:shadow-indigo-500/20"
             }
           />
 
@@ -39,7 +39,7 @@ function Navbar({ isDark, setIsDark }) {
                   : "inline-block text-base font-semibold tracking-tight text-slate-900 transition-all duration-300 ease-out group-hover:text-indigo-700"
               }
             >
-              Talent Bridge
+              Skill Span
             </span>
             <span
               className={
@@ -53,11 +53,11 @@ function Navbar({ isDark, setIsDark }) {
           </div>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {/* PROBLEMS PAGE LINK */}
           <Link
             to={"/problems"}
-            className={`rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 
               ${
                 isActive("/problems")
                   ? isDark
@@ -70,7 +70,7 @@ function Navbar({ isDark, setIsDark }) {
               
               `}
           >
-            <div className="flex items-center gap-x-2.5">
+            <div className="flex items-center gap-x-2 sm:gap-x-2.5">
               <BookOpenIcon className="size-4" />
               <span className="font-medium hidden sm:inline">Problems</span>
             </div>
@@ -79,7 +79,7 @@ function Navbar({ isDark, setIsDark }) {
           {/* DASHBORD PAGE LINK */}
           <Link
             to={"/dashboard"}
-            className={`rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 
               ${
                 isActive("/dashboard")
                   ? isDark
@@ -92,7 +92,7 @@ function Navbar({ isDark, setIsDark }) {
               
               `}
           >
-            <div className="flex items-center gap-x-2.5">
+            <div className="flex items-center gap-x-2 sm:gap-x-2.5">
               <LayoutDashboardIcon className="size-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </div>
@@ -102,15 +102,15 @@ function Navbar({ isDark, setIsDark }) {
             onClick={() => setIsDark((prev) => !prev)}
             className={
               isDark
-                ? "inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
-                : "inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                ? "inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+                : "inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             }
           >
             {isDark ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
-            {isDark ? "Light" : "Dark"}
+            <span className="hidden sm:inline">{isDark ? "Light" : "Dark"}</span>
           </button>
 
-          <div className={isDark ? "ml-1 overflow-hidden rounded-full border border-white/10 bg-white/5 p-1" : "ml-1 overflow-hidden rounded-full border border-slate-300 bg-white p-1"}>
+          <div className={isDark ? "ml-0.5 overflow-hidden rounded-full border border-white/10 bg-white/5 p-1 sm:ml-1" : "ml-0.5 overflow-hidden rounded-full border border-slate-300 bg-white p-1 sm:ml-1"}>
             <UserButton />
           </div>
         </div>

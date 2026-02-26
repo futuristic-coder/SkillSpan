@@ -2,7 +2,14 @@ import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 
 import { PROBLEMS } from "../data/problems";
-import { ChevronRightIcon, Code2Icon } from "lucide-react";
+import {
+  BookOpenIcon,
+  ChevronRightIcon,
+  Code2Icon,
+  LayersIcon,
+  SparklesIcon,
+  TargetIcon,
+} from "lucide-react";
 
 const getDifficultyBadgeClass = (difficulty, isDark) => {
   switch (difficulty?.toLowerCase()) {
@@ -26,7 +33,6 @@ const getDifficultyBadgeClass = (difficulty, isDark) => {
 };
 
 function ProblemsPage({ isDark, setIsDark }) {
-
   const problems = Object.values(PROBLEMS);
 
   const easyProblemsCount = problems.filter((p) => p.difficulty === "Easy").length;
@@ -42,87 +48,114 @@ function ProblemsPage({ isDark, setIsDark }) {
 
       <Navbar isDark={isDark} setIsDark={setIsDark} />
 
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        {/* HEADER */}
-        <div className="mb-8">
-          <h1 className={isDark ? "mb-2 text-4xl font-bold text-white" : "mb-2 text-4xl font-bold text-slate-900"}>
-            Practice Problems
-          </h1>
-          <p className={isDark ? "text-slate-300" : "text-slate-600"}>
-            Sharpen your coding skills with these curated problems
-          </p>
-        </div>
+      <main className="mx-auto w-full max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+        <section className={isDark ? "mb-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm sm:p-6" : "mb-6 rounded-2xl border border-slate-300 bg-white p-5 sm:p-6"}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className={isDark ? "mb-3 inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-200" : "mb-3 inline-flex items-center gap-2 rounded-full border border-indigo-300 bg-indigo-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-700"}>
+                <SparklesIcon className="size-3.5" />
+                Curated Coding Set
+              </div>
+              <h1 className={isDark ? "text-2xl font-black text-white sm:text-3xl lg:text-4xl" : "text-2xl font-black text-slate-900 sm:text-3xl lg:text-4xl"}>
+                Practice Problems
+              </h1>
+              <p className={isDark ? "mt-1 text-sm text-slate-300 sm:text-base" : "mt-1 text-sm text-slate-600 sm:text-base"}>
+                Sharpen your coding skills with interview-ready challenges.
+              </p>
+            </div>
 
-        {/* PROBLEMS LIST */}
-        <div className="space-y-4">
+            <div className={isDark ? "inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2 text-sm text-slate-300" : "inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"}>
+              <TargetIcon className={isDark ? "size-4 text-indigo-300" : "size-4 text-indigo-600"} />
+              Solve consistently, improve faster.
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+          <div className={isDark ? "rounded-xl border border-white/10 bg-white/5 p-4" : "rounded-xl border border-slate-300 bg-white p-4"}>
+            <div className="mb-2 flex items-center gap-2">
+              <BookOpenIcon className={isDark ? "size-4 text-indigo-300" : "size-4 text-indigo-600"} />
+              <p className={isDark ? "text-xs text-slate-400" : "text-xs text-slate-600"}>Total</p>
+            </div>
+            <p className={isDark ? "text-2xl font-bold text-indigo-300" : "text-2xl font-bold text-indigo-600"}>{problems.length}</p>
+          </div>
+
+          <div className={isDark ? "rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4" : "rounded-xl border border-emerald-300 bg-emerald-50 p-4"}>
+            <div className="mb-2 flex items-center gap-2">
+              <LayersIcon className={isDark ? "size-4 text-emerald-300" : "size-4 text-emerald-600"} />
+              <p className={isDark ? "text-xs text-emerald-200" : "text-xs text-emerald-700"}>Easy</p>
+            </div>
+            <p className={isDark ? "text-2xl font-bold text-emerald-300" : "text-2xl font-bold text-emerald-600"}>{easyProblemsCount}</p>
+          </div>
+
+          <div className={isDark ? "rounded-xl border border-amber-400/30 bg-amber-500/10 p-4" : "rounded-xl border border-amber-300 bg-amber-50 p-4"}>
+            <div className="mb-2 flex items-center gap-2">
+              <LayersIcon className={isDark ? "size-4 text-amber-300" : "size-4 text-amber-600"} />
+              <p className={isDark ? "text-xs text-amber-200" : "text-xs text-amber-700"}>Medium</p>
+            </div>
+            <p className={isDark ? "text-2xl font-bold text-amber-300" : "text-2xl font-bold text-amber-600"}>{mediumProblemsCount}</p>
+          </div>
+
+          <div className={isDark ? "rounded-xl border border-rose-400/30 bg-rose-500/10 p-4" : "rounded-xl border border-rose-300 bg-rose-50 p-4"}>
+            <div className="mb-2 flex items-center gap-2">
+              <LayersIcon className={isDark ? "size-4 text-rose-300" : "size-4 text-rose-600"} />
+              <p className={isDark ? "text-xs text-rose-200" : "text-xs text-rose-700"}>Hard</p>
+            </div>
+            <p className={isDark ? "text-2xl font-bold text-rose-300" : "text-2xl font-bold text-rose-600"}>{hardProblemsCount}</p>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
           {problems.map((problem) => (
             <Link
               key={problem.id}
               to={`/problem/${problem.id}`}
               className={
                 isDark
-                  ? "block rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition-transform duration-200 hover:scale-[1.01] hover:border-indigo-300/40"
-                  : "block rounded-2xl border border-slate-300 bg-white p-5 transition-transform duration-200 hover:scale-[1.01] hover:border-indigo-400"
+                  ? "group flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40"
+                  : "group flex h-full flex-col rounded-2xl border border-slate-300 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-400"
               }
             >
-              <div className="flex items-center justify-between gap-4">
-                {/* LEFT SIDE */}
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-3">
-                    <div className={isDark ? "flex size-12 items-center justify-center rounded-lg border border-indigo-400/30 bg-indigo-500/10 text-indigo-300" : "flex size-12 items-center justify-center rounded-lg border border-indigo-300 bg-indigo-100 text-indigo-600"}>
-                      <Code2Icon className="size-6" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <h2 className={isDark ? "text-xl font-bold text-white" : "text-xl font-bold text-slate-900"}>{problem.title}</h2>
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyBadgeClass(
-                            problem.difficulty,
-                            isDark
-                          )}`}
-                        >
-                          {problem.difficulty}
-                        </span>
-                      </div>
-                      <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-600"}>{problem.category}</p>
-                    </div>
-                  </div>
-                  <p className={isDark ? "mb-3 text-slate-300" : "mb-3 text-slate-700"}>{problem.description.text}</p>
+              <div className="mb-4 flex items-start gap-3">
+                <div className={isDark ? "flex size-10 shrink-0 items-center justify-center rounded-lg border border-indigo-400/30 bg-indigo-500/10 text-indigo-300" : "flex size-10 shrink-0 items-center justify-center rounded-lg border border-indigo-300 bg-indigo-100 text-indigo-600"}>
+                  <Code2Icon className="size-5" />
                 </div>
-                {/* RIGHT SIDE */}
 
-                <div className={isDark ? "flex items-center gap-2 text-indigo-300" : "flex items-center gap-2 text-indigo-600"}>
-                  <span className="font-medium">Solve</span>
-                  <ChevronRightIcon className="size-5" />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <h2 className={isDark ? "text-base font-bold text-white sm:text-lg" : "text-base font-bold text-slate-900 sm:text-lg"}>{problem.title}</h2>
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyBadgeClass(
+                        problem.difficulty,
+                        isDark
+                      )}`}
+                    >
+                      {problem.difficulty}
+                    </span>
+                  </div>
+                  <p className={isDark ? "text-xs text-slate-400 sm:text-sm" : "text-xs text-slate-600 sm:text-sm"}>{problem.category}</p>
+                </div>
+              </div>
+
+              <p className={isDark ? "mb-5 text-sm leading-6 text-slate-300" : "mb-5 text-sm leading-6 text-slate-700"}>{problem.description.text}</p>
+
+              <div className="mt-auto flex items-center justify-between">
+                <span className={isDark ? "text-xs text-slate-400" : "text-xs text-slate-500"}>Open challenge</span>
+                <div className={isDark ? "inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-300" : "inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600"}>
+                  Solve
+                  <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
                 </div>
               </div>
             </Link>
           ))}
-        </div>
+        </section>
 
-        {/* STATS FOOTER */}
-        <div className={isDark ? "mt-12 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm" : "mt-12 rounded-2xl border border-slate-300 bg-white p-6"}>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div>
-              <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Total Problems</p>
-              <p className={isDark ? "mt-1 text-3xl font-bold text-indigo-300" : "mt-1 text-3xl font-bold text-indigo-600"}>{problems.length}</p>
-            </div>
-
-            <div>
-              <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Easy</p>
-              <p className={isDark ? "mt-1 text-3xl font-bold text-emerald-300" : "mt-1 text-3xl font-bold text-emerald-600"}>{easyProblemsCount}</p>
-            </div>
-            <div>
-              <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Medium</p>
-              <p className={isDark ? "mt-1 text-3xl font-bold text-amber-300" : "mt-1 text-3xl font-bold text-amber-600"}>{mediumProblemsCount}</p>
-            </div>
-            <div>
-              <p className={isDark ? "text-sm text-slate-400" : "text-sm text-slate-600"}>Hard</p>
-              <p className={isDark ? "mt-1 text-3xl font-bold text-rose-300" : "mt-1 text-3xl font-bold text-rose-600"}>{hardProblemsCount}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        <section className={isDark ? "mt-6 rounded-2xl border border-white/10 bg-gradient-to-r from-indigo-600/10 via-violet-600/10 to-cyan-600/10 p-4 text-center sm:p-5" : "mt-6 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-100 via-violet-100 to-cyan-100 p-4 text-center sm:p-5"}>
+          <p className={isDark ? "text-sm text-slate-200 sm:text-base" : "text-sm text-slate-700 sm:text-base"}>
+            Pick a problem that matches your level and practice consistently.
+          </p>
+        </section>
+      </main>
     </div>
   );
 }
