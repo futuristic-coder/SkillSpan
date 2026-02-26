@@ -1,5 +1,3 @@
-import { getDifficultyBadgeClass } from "../config/utils";
-
 const getDifficultyThemeClass = (difficulty, isDark) => {
   const baseClasses = "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold";
   switch (difficulty?.toLowerCase()) {
@@ -26,14 +24,14 @@ function ProblemDescription({ isDark, problem, currentProblemId, onProblemChange
   return (
     <div className={isDark ? "h-full overflow-y-auto bg-slate-900" : "h-full overflow-y-auto bg-slate-50"}>
       {/* HEADER SECTION */}
-      <div className={isDark ? "border-b border-slate-700 bg-slate-950 p-6" : "border-b border-slate-300 bg-white p-6"}>
-        <div className="mb-3 flex items-start justify-between">
-          <h1 className={isDark ? "text-3xl font-bold text-white" : "text-3xl font-bold text-slate-900"}>{problem.title}</h1>
+      <div className={isDark ? "border-b border-slate-700 bg-slate-950 p-4 sm:p-6" : "border-b border-slate-300 bg-white p-4 sm:p-6"}>
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className={isDark ? "text-2xl font-bold text-white sm:text-3xl" : "text-2xl font-bold text-slate-900 sm:text-3xl"}>{problem.title}</h1>
           <span className={getDifficultyThemeClass(problem.difficulty, isDark)}>
             {problem.difficulty}
           </span>
         </div>
-        <p className={isDark ? "text-slate-400" : "text-slate-600"}>{problem.category}</p>
+        <p className={isDark ? "text-sm text-slate-400 sm:text-base" : "text-sm text-slate-600 sm:text-base"}>{problem.category}</p>
 
         {/* Problem selector */}
         <div className="mt-4">
@@ -51,15 +49,15 @@ function ProblemDescription({ isDark, problem, currentProblemId, onProblemChange
         </div>
       </div>
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
         {/* PROBLEM DESC */}
-        <div className={isDark ? "rounded-xl border border-slate-700 bg-slate-800 p-5 shadow-sm" : "rounded-xl border border-slate-300 bg-white p-5 shadow-sm"}>
-          <h2 className={isDark ? "text-xl font-bold text-white" : "text-xl font-bold text-slate-900"}>Description</h2>
+        <div className={isDark ? "rounded-xl border border-slate-700 bg-slate-800 p-4 shadow-sm sm:p-5" : "rounded-xl border border-slate-300 bg-white p-4 shadow-sm sm:p-5"}>
+          <h2 className={isDark ? "text-lg font-bold text-white sm:text-xl" : "text-lg font-bold text-slate-900 sm:text-xl"}>Description</h2>
 
           <div className="space-y-3 leading-relaxed">
-            <p className={isDark ? "text-slate-300" : "text-slate-700"}>{problem.description.text}</p>
+            <p className={isDark ? "text-sm text-slate-300 sm:text-base" : "text-sm text-slate-700 sm:text-base"}>{problem.description.text}</p>
             {problem.description.notes.map((note, idx) => (
-              <p key={idx} className={isDark ? "text-slate-300" : "text-slate-700"}>
+              <p key={idx} className={isDark ? "text-sm text-slate-300 sm:text-base" : "text-sm text-slate-700 sm:text-base"}>
                 {note}
               </p>
             ))}
@@ -67,8 +65,8 @@ function ProblemDescription({ isDark, problem, currentProblemId, onProblemChange
         </div>
 
         {/* EXAMPLES SECTION */}
-        <div className={isDark ? "rounded-xl border border-slate-700 bg-slate-800 p-5 shadow-sm" : "rounded-xl border border-slate-300 bg-white p-5 shadow-sm"}>
-          <h2 className={isDark ? "mb-4 text-xl font-bold text-white" : "mb-4 text-xl font-bold text-slate-900"}>Examples</h2>
+        <div className={isDark ? "rounded-xl border border-slate-700 bg-slate-800 p-4 shadow-sm sm:p-5" : "rounded-xl border border-slate-300 bg-white p-4 shadow-sm sm:p-5"}>
+          <h2 className={isDark ? "mb-4 text-lg font-bold text-white sm:text-xl" : "mb-4 text-lg font-bold text-slate-900 sm:text-xl"}>Examples</h2>
           <div className="space-y-4">
             {problem.examples.map((example, idx) => (
               <div key={idx}>
@@ -76,13 +74,13 @@ function ProblemDescription({ isDark, problem, currentProblemId, onProblemChange
                   <span className={isDark ? "inline-flex items-center justify-center rounded-md bg-indigo-500/20 px-2 py-0.5 text-xs font-semibold text-indigo-300" : "inline-flex items-center justify-center rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700"}>{idx + 1}</span>
                   <p className={isDark ? "font-semibold text-white" : "font-semibold text-slate-900"}>Example {idx + 1}</p>
                 </div>
-                <div className={isDark ? "space-y-1.5 rounded-lg bg-slate-900 p-4 font-mono text-sm" : "space-y-1.5 rounded-lg bg-slate-100 p-4 font-mono text-sm"}>
-                  <div className="flex gap-2">
-                    <span className={isDark ? "min-w-[70px] font-bold text-indigo-300" : "min-w-[70px] font-bold text-indigo-600"}>Input:</span>
+                <div className={isDark ? "space-y-1.5 rounded-lg bg-slate-900 p-3 font-mono text-xs sm:p-4 sm:text-sm" : "space-y-1.5 rounded-lg bg-slate-100 p-3 font-mono text-xs sm:p-4 sm:text-sm"}>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:gap-2">
+                    <span className={isDark ? "font-bold text-indigo-300 sm:min-w-[70px]" : "font-bold text-indigo-600 sm:min-w-[70px]"}>Input:</span>
                     <span className={isDark ? "text-slate-300" : "text-slate-700"}>{example.input}</span>
                   </div>
-                  <div className="flex gap-2">
-                    <span className={isDark ? "min-w-[70px] font-bold text-emerald-300" : "min-w-[70px] font-bold text-emerald-600"}>Output:</span>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:gap-2">
+                    <span className={isDark ? "font-bold text-emerald-300 sm:min-w-[70px]" : "font-bold text-emerald-600 sm:min-w-[70px]"}>Output:</span>
                     <span className={isDark ? "text-slate-300" : "text-slate-700"}>{example.output}</span>
                   </div>
                   {example.explanation && (
@@ -99,13 +97,13 @@ function ProblemDescription({ isDark, problem, currentProblemId, onProblemChange
         </div>
 
         {/* CONSTRAINTS */}
-        <div className={isDark ? "rounded-xl border border-slate-700 bg-slate-800 p-5 shadow-sm" : "rounded-xl border border-slate-300 bg-white p-5 shadow-sm"}>
-          <h2 className={isDark ? "mb-4 text-xl font-bold text-white" : "mb-4 text-xl font-bold text-slate-900"}>Constraints</h2>
-          <ul className={isDark ? "space-y-2 text-slate-300" : "space-y-2 text-slate-700"}>
+        <div className={isDark ? "rounded-xl border border-slate-700 bg-slate-800 p-4 shadow-sm sm:p-5" : "rounded-xl border border-slate-300 bg-white p-4 shadow-sm sm:p-5"}>
+          <h2 className={isDark ? "mb-4 text-lg font-bold text-white sm:text-xl" : "mb-4 text-lg font-bold text-slate-900 sm:text-xl"}>Constraints</h2>
+          <ul className={isDark ? "space-y-2 text-sm text-slate-300 sm:text-base" : "space-y-2 text-sm text-slate-700 sm:text-base"}>
             {problem.constraints.map((constraint, idx) => (
               <li key={idx} className="flex gap-2">
                 <span className={isDark ? "text-indigo-300" : "text-indigo-600"}>•</span>
-                <code className="text-sm">{constraint}</code>
+                <code className="break-words text-xs sm:text-sm">{constraint}</code>
               </li>
             ))}
           </ul>

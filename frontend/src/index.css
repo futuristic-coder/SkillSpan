@@ -32,3 +32,57 @@ button:not(:disabled),
 [role="button"]:not(:disabled) {
   cursor: pointer;
 }
+
+@media (max-width: 640px) {
+  .str-video__call-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .str-video__call-controls button,
+  .str-video__call-controls .str-video__composite-button {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+  }
+}
+
+.session-chat-panel .str-chat,
+.session-chat-panel .str-chat__channel,
+.session-chat-panel .str-chat__main-panel,
+.session-chat-panel .str-chat__thread,
+.session-chat-panel .str-chat__list {
+  height: 100%;
+}
+
+.session-chat-panel .str-chat__list {
+  padding: 0.5rem 0.5rem 0.25rem;
+}
+
+.session-chat-panel .str-chat__message-simple__text-inner {
+  border-radius: 0.75rem;
+}
+
+.session-chat-panel .str-chat__message-input {
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 0.5rem;
+}
+
+.session-chat-panel .str-chat__message-textarea-container textarea {
+  min-height: 2.5rem;
+}
+
+@media (max-width: 767px) {
+  .session-chat-panel {
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+
+  .session-chat-panel .str-chat__list {
+    padding-inline: 0.4rem;
+  }
+
+  .session-chat-panel .str-chat__message-input {
+    padding: 0.4rem;
+  }
+}

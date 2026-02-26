@@ -20,16 +20,16 @@ const getDifficultyThemeClass = (difficulty, isDark) => {
 
 function RecentSessions({ isDark, sessions, isLoading }) {
   return (
-    <div className={isDark ? "mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm sm:p-6" : "mt-8 rounded-2xl border border-slate-300 bg-white p-4 sm:p-6"}>
+    <div className={isDark ? "mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm sm:p-5" : "mt-5 rounded-2xl border border-slate-300 bg-white p-4 sm:p-5"}>
       <div>
-        <div className="mb-4 flex items-center gap-3 sm:mb-6">
-          <div className="rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 p-1.5 sm:p-2">
-            <Clock className="h-4 w-4 text-white sm:h-5 sm:w-5" />
+        <div className="mb-4 flex items-center gap-3">
+          <div className="rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 p-1.5 sm:p-2">
+            <Clock className="h-4 w-4 text-white" />
           </div>
-          <h2 className={isDark ? "text-xl font-black text-white sm:text-2xl" : "text-xl font-black text-slate-900 sm:text-2xl"}>Your Past Sessions</h2>
+          <h2 className={isDark ? "text-lg font-black text-white sm:text-xl" : "text-lg font-black text-slate-900 sm:text-xl"}>Your Past Sessions</h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
             <div className="col-span-full flex items-center justify-center py-20">
               <Loader className={isDark ? "h-10 w-10 animate-spin text-indigo-300" : "h-10 w-10 animate-spin text-indigo-600"} />
@@ -38,7 +38,7 @@ function RecentSessions({ isDark, sessions, isLoading }) {
             sessions.map((session) => (
               <div
                 key={session._id}
-                className={`relative rounded-xl border p-4 transition sm:p-5 ${
+                className={`relative rounded-xl border p-3.5 transition sm:p-4 ${
                   session.status === "active"
                     ? isDark
                       ? "border-emerald-400/40 bg-emerald-500/10 hover:border-emerald-300/60"
@@ -58,18 +58,18 @@ function RecentSessions({ isDark, sessions, isLoading }) {
                 )}
 
                 <div>
-                  <div className="mb-3 flex items-start gap-3 sm:mb-4">
+                  <div className="mb-3 flex items-start gap-3">
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                         session.status === "active"
                           ? "bg-gradient-to-br from-emerald-500 to-emerald-400"
                           : "bg-gradient-to-br from-indigo-500 to-violet-500"
                       }`}
                     >
-                      <Code2 className="h-6 w-6 text-white" />
+                      <Code2 className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className={isDark ? "mb-1 truncate text-sm font-bold text-white sm:text-base" : "mb-1 truncate text-sm font-bold text-slate-900 sm:text-base"}>{session.problem}</h3>
+                      <h3 className={isDark ? "mb-1 truncate text-sm font-bold text-white" : "mb-1 truncate text-sm font-bold text-slate-900"}>{session.problem}</h3>
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${getDifficultyThemeClass(session.difficulty, isDark)}`}
                       >
@@ -78,7 +78,7 @@ function RecentSessions({ isDark, sessions, isLoading }) {
                     </div>
                   </div>
 
-                  <div className={isDark ? "mb-4 space-y-2 text-xs text-slate-300 sm:text-sm" : "mb-4 space-y-2 text-xs text-slate-600 sm:text-sm"}>
+                  <div className={isDark ? "mb-3.5 space-y-1.5 text-xs text-slate-300" : "mb-3.5 space-y-1.5 text-xs text-slate-600"}>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
                       <span>

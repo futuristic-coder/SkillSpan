@@ -6,6 +6,7 @@ import ProblemsPage from "./pages/ProblemsPage";
 import ProblemPage from "./pages/ProblemPage";
 import { Toaster } from "react-hot-toast";
 import DashboardPage from "./pages/DashboardPage";
+import SessionPage from "./pages/SessionPage";
 
 function App() {
   const { isSignedIn, isLoaded } = useUser();
@@ -45,6 +46,12 @@ function App() {
           path="/problem/:id"
           element={
             isSignedIn ? <ProblemPage isDark={isDark} setIsDark={setIsDark} /> : <Navigate to={"/"} />
+          }
+        />
+        <Route
+          path="/session/:id"
+          element={
+            isSignedIn ? <SessionPage isDark={isDark} setIsDark={setIsDark} /> : <Navigate to={"/"} />
           }
         />
       </Routes>
