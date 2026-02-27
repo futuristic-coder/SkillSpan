@@ -72,8 +72,60 @@ button:not(:disabled),
   min-height: 2.5rem;
 }
 
+.session-call-controls {
+  overflow: visible;
+}
+
+.session-call-controls .str-video__call-controls {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.session-call-controls .str-video__call-controls button,
+.session-call-controls .str-video__call-controls .str-video__composite-button {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  pointer-events: auto;
+}
+
+.session-call-controls .str-video__call-controls button,
+.session-call-controls .str-video__call-controls .str-video__composite-button button {
+  border: 1px solid rgba(100, 116, 139, 0.45);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+}
+
+.session-call-controls .str-video__call-controls button:hover,
+.session-call-controls .str-video__call-controls .str-video__composite-button button:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.session-call-controls .str-video__call-controls [aria-label*="leave" i],
+.session-call-controls .str-video__call-controls [data-testid*="leave" i] {
+  background: rgba(190, 24, 93, 0.92) !important;
+  border-color: rgba(244, 114, 182, 0.8) !important;
+  color: #fff !important;
+}
+
+.session-call-controls .str-video__call-controls [aria-label*="record" i],
+.session-call-controls .str-video__call-controls [data-testid*="record" i],
+.session-call-controls .str-video__call-controls [class*="record" i] {
+  display: none !important;
+}
+
+.session-chat-panel {
+  max-width: min(22rem, 42vw);
+}
+
 @media (max-width: 767px) {
   .session-chat-panel {
+    max-width: none;
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
   }
@@ -84,5 +136,15 @@ button:not(:disabled),
 
   .session-chat-panel .str-chat__message-input {
     padding: 0.4rem;
+  }
+
+  .session-call-controls .str-video__call-controls {
+    gap: 0.4rem;
+  }
+
+  .session-call-controls .str-video__call-controls button,
+  .session-call-controls .str-video__call-controls .str-video__composite-button {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
   }
 }

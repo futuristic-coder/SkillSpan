@@ -13,6 +13,89 @@ const normalizeDifficulty = (difficulty = "") => {
 const stripMarkdownFence = (value = "") =>
   value.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
 
+const ensureDetailedDescription = (problem, topic, difficulty) => {
+  const minDescriptionLength = 220;
+  const title = problem?.title || topic || "Custom Coding Problem";
+  const safeDifficulty = normalizeDifficulty(difficulty || problem?.difficulty || "Medium");
+
+  const fallbackDescription =
+    `You are given a problem based on ${title}. Build a robust and efficient solution that works across edge cases and large inputs. ` +
+    `Start by identifying the right data structure and approach for the ${safeDifficulty.toLowerCase()} difficulty level, then implement clean, testable logic. ` +
+    `Your solution should return the expected output exactly as described and avoid unnecessary extra work, with clear attention to correctness and performance.`;
+
+  let descriptionText = (problem?.description?.text || "").trim();
+  if (!descriptionText || descriptionText.length < minDescriptionLength) {
+    descriptionText = descriptionText
+      ? `${descriptionText} ${fallbackDescription}`.trim()
+      : fallbackDescription;
+  }
+
+  const notes = Array.isArray(problem?.description?.notes) ? [...problem.description.notes] : [];
+
+  const defaultNotes = [
+    "Explain the core algorithm and why it is correct.",
+    "Handle edge cases such as empty/minimal inputs and boundary values.",
+    "Mention expected time and space complexity of your approach.",
+  ];
+
+  const normalizedNotes = notes
+    .map((note) => String(note || "").trim())
+    .filter(Boolean);
+
+  while (normalizedNotes.length < 3) {
+    normalizedNotes.push(defaultNotes[normalizedNotes.length]);
+  }
+
+  return {
+    ...problem,
+    description: {
+      text: descriptionText,
+      notes: normalizedNotes,
+    },
+  };
+};
+
+const ensureExamplesAndConstraints = (problem) => {
+  const examples = Array.isArray(problem?.examples) ? [...problem.examples] : [];
+  const normalizedExamples = examples
+    .map((example) => ({
+      input: String(example?.input || "").trim(),
+      output: String(example?.output || "").trim(),
+      explanation: String(example?.explanation || "").trim(),
+    }))
+    .filter((example) => example.input && example.output);
+
+  if (normalizedExamples.length && normalizedExamples.length < 2) {
+    normalizedExamples.push({
+      input: "Provide another valid input case",
+      output: "Provide expected output",
+      explanation: "Include a short reasoning for this output.",
+    });
+  }
+
+  const constraints = Array.isArray(problem?.constraints)
+    ? problem.constraints.map((value) => String(value || "").trim()).filter(Boolean)
+    : [];
+
+  const defaultConstraints = [
+    "Input size can be large; design for efficiency.",
+    "Avoid using brute-force when a better approach exists.",
+    "Return output exactly in the required format.",
+  ];
+
+  const normalizedConstraints = [...constraints];
+  for (const constraint of defaultConstraints) {
+    if (normalizedConstraints.length >= 4) break;
+    normalizedConstraints.push(constraint);
+  }
+
+  return {
+    ...problem,
+    examples: normalizedExamples,
+    constraints: normalizedConstraints,
+  };
+};
+
 const buildFallbackProblem = (topic, difficulty = "Medium") => {
   const title = topic?.trim() || "Custom Coding Problem";
   const safeDifficulty = normalizeDifficulty(difficulty);
@@ -53,7 +136,7 @@ const sanitizeGeneratedProblem = (problem, topic, difficulty) => {
   const fallback = buildFallbackProblem(topic, difficulty);
   const safeDifficulty = normalizeDifficulty(problem?.difficulty || difficulty || fallback.difficulty);
 
-  return {
+  const baseProblem = {
     title: problem?.title || fallback.title,
     difficulty: safeDifficulty,
     category: problem?.category || fallback.category,
@@ -74,6 +157,9 @@ const sanitizeGeneratedProblem = (problem, topic, difficulty) => {
       java: problem?.expectedOutput?.java || fallback.expectedOutput.java,
     },
   };
+
+  const withDetails = ensureDetailedDescription(baseProblem, topic, safeDifficulty);
+  return ensureExamplesAndConstraints(withDetails);
 };
 
 const fetchGeneratedProblem = async (topic, difficulty) => {
@@ -81,7 +167,7 @@ const fetchGeneratedProblem = async (topic, difficulty) => {
     return buildFallbackProblem(topic, difficulty);
   }
 
-  const prompt = `Generate one coding interview problem as strict JSON only (no markdown).\n\nTopic: ${topic}\nPreferred difficulty: ${difficulty || "Medium"}\n\nRequired JSON shape:\n{\n  "title": "string",\n  "difficulty": "Easy|Medium|Hard",\n  "category": "string",\n  "description": { "text": "string", "notes": ["string"] },\n  "examples": [{ "input": "string", "output": "string", "explanation": "string" }],\n  "constraints": ["string"],\n  "starterCode": { "javascript": "string", "python": "string", "java": "string" },\n  "expectedOutput": { "javascript": "string", "python": "string", "java": "string" }\n}\n\nRules:\n- Keep examples realistic and executable.\n- Keep starterCode complete and compilable.\n- starterCode must be NON-INTERACTIVE (no stdin, no prompts, no Scanner/System.in, no input(), no readline()).\n- starterCode must include built-in test calls (console.log / print / System.out.println) so it runs directly.\n- expectedOutput must exactly match what starterCode prints for each language.`;
+  const prompt = `Generate one coding interview problem as strict JSON only (no markdown).\n\nTopic: ${topic}\nPreferred difficulty: ${difficulty || "Medium"}\n\nRequired JSON shape:\n{\n  "title": "string",\n  "difficulty": "Easy|Medium|Hard",\n  "category": "string",\n  "description": { "text": "string", "notes": ["string"] },\n  "examples": [{ "input": "string", "output": "string", "explanation": "string" }],\n  "constraints": ["string"],\n  "starterCode": { "javascript": "string", "python": "string", "java": "string" },\n  "expectedOutput": { "javascript": "string", "python": "string", "java": "string" }\n}\n\nQuality Rules:\n- description.text must be detailed (at least 120 words) with context, objective, and expected behavior.\n- description.notes must include at least 3 informative bullets (approach guidance, edge cases, complexity).\n- Provide at least 2 realistic examples, each with clear explanation.\n- Provide at least 4 meaningful constraints.\n- Keep starterCode complete and compilable.\n- starterCode must be NON-INTERACTIVE (no stdin, no prompts, no Scanner/System.in, no input(), no readline()).\n- starterCode must include built-in test calls (console.log / print / System.out.println) so it runs directly.\n- expectedOutput must exactly match what starterCode prints for each language.`;
 
   const response = await fetch(
     "https://api.groq.com/openai/v1/chat/completions",
@@ -175,6 +261,11 @@ export async function createSession(req, res) {
       data: {
         created_by_id: clerkId,
         custom: { problem, difficulty: normalizedDifficulty, sessionId: session._id.toString() },
+        settings_override: {
+          recording: {
+            mode: "disabled",
+          },
+        },
       },
     });
 

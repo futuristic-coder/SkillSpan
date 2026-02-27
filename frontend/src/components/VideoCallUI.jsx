@@ -4,9 +4,10 @@ import {
   SpeakerLayout,
   useCallStateHooks,
 } from "@stream-io/video-react-sdk";
-import { Loader2Icon, MessageSquareIcon, UsersIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeftIcon, Loader2Icon, MessageSquareIcon, UsersIcon, XIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
 import { Channel, Chat, MessageInput, MessageList, Thread, Window } from "stream-chat-react";
 import useIsMobile from "../hooks/useIsMobile";
 
@@ -19,7 +20,57 @@ function VideoCallUI({ isDark, chatClient, channel }) {
   const callingState = useCallCallingState();
   const participantCount = useParticipantCount();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (!chatClient || !channel) return;
+
+    const setInitialUnread = () => {
+      const unread =
+        typeof channel.countUnread === "function"
+          ? channel.countUnread()
+          : channel?.state?.unreadCount || 0;
+      setUnreadCount(Number(unread) || 0);
+    };
+
+    setInitialUnread();
+
+    const handleNewMessage = (event) => {
+      const senderId = event?.user?.id;
+      if (senderId && chatClient.userID && senderId === chatClient.userID) return;
+
+      if (!isChatOpen) {
+        setUnreadCount((prev) => prev + 1);
+        toast(`${event?.user?.name || "Someone"} sent a message`, {
+          icon: "💬",
+          duration: 2500,
+        });
+      }
+    };
+
+    channel.on("message.new", handleNewMessage);
+
+    return () => {
+      channel.off("message.new", handleNewMessage);
+    };
+  }, [chatClient, channel, isChatOpen]);
+
+  const handleToggleChat = () => {
+    setIsChatOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setUnreadCount(0);
+        channel?.markRead?.();
+      }
+      return next;
+    });
+  };
+
+  const handleCloseChat = () => {
+    setIsChatOpen(false);
+    channel?.markRead?.();
+  };
 
   if (callingState === CallingState.JOINING) {
     return (
@@ -43,30 +94,37 @@ function VideoCallUI({ isDark, chatClient, channel }) {
               {participantCount} {participantCount === 1 ? "participant" : "participants"}
             </span>
           </div>
-          {chatClient && channel && (
-            <button
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className={isChatOpen
-                ? isDark
-                  ? "inline-flex items-center gap-2 rounded-xl border border-indigo-400/60 bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition"
-                  : "inline-flex items-center gap-2 rounded-xl border border-indigo-600 bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white shadow-md shadow-indigo-300/50 transition"
-                : isDark
-                ? "inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
-                : "inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              }
-              title={isChatOpen ? "Hide chat" : "Show chat"}
-            >
-              <MessageSquareIcon className="size-4" />
-              Chat
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {chatClient && channel && (
+              <button
+                onClick={handleToggleChat}
+                className={isChatOpen
+                  ? isDark
+                    ? "inline-flex items-center gap-2 rounded-xl border border-indigo-400/60 bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition"
+                    : "inline-flex items-center gap-2 rounded-xl border border-indigo-600 bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white shadow-md shadow-indigo-300/50 transition"
+                  : isDark
+                  ? "inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+                  : "inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                }
+                title={isChatOpen ? "Hide chat" : "Show chat"}
+              >
+                <MessageSquareIcon className="size-4" />
+                Chat
+                {unreadCount > 0 && !isChatOpen && (
+                  <span className={isDark ? "inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white" : "inline-flex min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 text-[10px] font-bold text-white"}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className={isDark ? "relative flex-1 overflow-hidden rounded-xl border border-white/10 bg-slate-900" : "relative flex-1 overflow-hidden rounded-xl border border-slate-300 bg-slate-100"}>
-          <SpeakerLayout />
+        <div className={isDark ? "relative min-h-[280px] flex-1 overflow-hidden rounded-xl border border-white/10 bg-slate-900" : "relative min-h-[280px] flex-1 overflow-hidden rounded-xl border border-slate-300 bg-slate-100"}>
+          <SpeakerLayout participantsBarPosition="bottom" />
         </div>
 
-        <div className={isDark ? "flex justify-center rounded-xl border border-white/10 bg-white/5 p-3" : "flex justify-center rounded-xl border border-slate-300 bg-white p-3"}>
+        <div className={isDark ? "session-call-controls relative z-30 flex justify-center rounded-xl border border-white/10 bg-white/5 p-3" : "session-call-controls relative z-30 flex justify-center rounded-xl border border-slate-300 bg-white p-3"}>
           <CallControls onLeave={() => navigate("/dashboard")} />
         </div>
       </div>
@@ -79,7 +137,7 @@ function VideoCallUI({ isDark, chatClient, channel }) {
             <button
               type="button"
               aria-label="Close chat overlay"
-              onClick={() => setIsChatOpen(false)}
+              onClick={handleCloseChat}
               className="fixed inset-0 z-30 bg-slate-950/55 backdrop-blur-[1px]"
             />
           )}
@@ -93,16 +151,28 @@ function VideoCallUI({ isDark, chatClient, channel }) {
                   ? "fixed inset-x-3 bottom-3 z-40 h-[70vh] max-h-[560px] translate-y-0 opacity-100 shadow-2xl"
                   : "pointer-events-none fixed inset-x-3 bottom-3 z-40 h-[70vh] max-h-[560px] translate-y-4 opacity-0"
                 : isChatOpen
-                ? "z-20 w-80 opacity-100"
-                : "pointer-events-none z-20 w-0 opacity-0"
+                ? "z-20 w-80 shrink-0 self-stretch opacity-100"
+                : "pointer-events-none z-20 w-0 shrink-0 self-stretch opacity-0"
             }`}
           >
             {isChatOpen && (
               <>
                 <div className={isDark ? "session-chat-header flex items-center justify-between border-b border-white/10 bg-slate-950 p-3" : "session-chat-header flex items-center justify-between border-b border-slate-300 bg-slate-50 p-3"}>
-                  <h3 className={isDark ? "font-semibold text-white" : "font-semibold text-slate-900"}>Session Chat</h3>
+                  {isMobile ? (
+                    <button
+                      onClick={handleCloseChat}
+                      className={isDark ? "inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-100" : "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"}
+                      title="Back to call"
+                    >
+                      <ChevronLeftIcon className="size-4" />
+                      Back to Call
+                    </button>
+                  ) : (
+                    <h3 className={isDark ? "font-semibold text-white" : "font-semibold text-slate-900"}>Session Chat</h3>
+                  )}
+
                   <button
-                    onClick={() => setIsChatOpen(false)}
+                    onClick={handleCloseChat}
                     className={isDark ? "text-slate-400 transition-colors hover:text-white" : "text-slate-500 transition-colors hover:text-slate-800"}
                     title="Close chat"
                   >
