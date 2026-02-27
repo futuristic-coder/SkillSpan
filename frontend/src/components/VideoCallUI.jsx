@@ -1,6 +1,7 @@
 import {
   CallControls,
   CallingState,
+  DefaultParticipantViewUI,
   ParticipantView,
   SpeakerLayout,
   useCallStateHooks,
@@ -14,6 +15,8 @@ import useIsMobile from "../hooks/useIsMobile";
 
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import "stream-chat-react/dist/css/v2/index.css";
+
+const NoMenuParticipantViewUI = () => <DefaultParticipantViewUI showMenuButton={false} />;
 
 function VideoCallUI({ isDark, chatClient, channel }) {
   const navigate = useNavigate();
@@ -124,11 +127,15 @@ function VideoCallUI({ isDark, chatClient, channel }) {
         </div>
 
         <div className={isDark ? "relative h-[42vh] min-h-[220px] overflow-hidden rounded-xl border border-white/10 bg-slate-900 md:h-auto md:min-h-[280px] md:flex-1" : "relative h-[42vh] min-h-[220px] overflow-hidden rounded-xl border border-slate-300 bg-slate-100 md:h-auto md:min-h-[280px] md:flex-1"}>
-          <SpeakerLayout participantsBarPosition="bottom" />
+          <SpeakerLayout
+            participantsBarPosition="bottom"
+            ParticipantViewUISpotlight={NoMenuParticipantViewUI}
+            ParticipantViewUIBar={NoMenuParticipantViewUI}
+          />
 
-          {isMobile && localParticipant && (
-            <div className={isDark ? "session-self-preview pointer-events-none absolute bottom-3 right-3 z-20 aspect-[3/4] w-24 overflow-hidden rounded-xl border border-white/25 bg-slate-900 shadow-xl" : "session-self-preview pointer-events-none absolute bottom-3 right-3 z-20 aspect-[3/4] w-24 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-lg"}>
-              <ParticipantView participant={localParticipant} />
+          {localParticipant && (
+            <div className={isDark ? "session-self-preview pointer-events-none absolute bottom-3 right-3 z-20 aspect-[3/4] w-24 overflow-hidden rounded-xl border border-white/25 bg-slate-900 shadow-xl md:w-28" : "session-self-preview pointer-events-none absolute bottom-3 right-3 z-20 aspect-[3/4] w-24 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-lg md:w-28"}>
+              <ParticipantView participant={localParticipant} ParticipantViewUI={NoMenuParticipantViewUI} />
               <div className={isDark ? "absolute left-1.5 top-1.5 rounded-md bg-slate-950/80 px-1.5 py-0.5 text-[10px] font-semibold text-white" : "absolute left-1.5 top-1.5 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold text-white"}>
                 You
               </div>

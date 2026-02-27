@@ -204,7 +204,7 @@ function CreateSessionModal({
                   Difficulty: <span className="font-medium">{roomConfig.difficulty || "Medium"}</span>
                 </p>
                 <p>
-                  Max Participants: <span className="font-medium">2 (1-on-1 session)</span>
+                  Participants: <span className="font-medium">Unlimited</span>
                 </p>
                 {roomConfig.customProblem && (
                   <p className="mt-1 text-xs font-medium">AI generated problem selected</p>

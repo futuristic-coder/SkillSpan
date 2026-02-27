@@ -5,6 +5,17 @@ import Session from "../models/Session.js";
 const allowedDifficulties = ["Easy", "Medium", "Hard"];
 const GROQ_PROBLEM_MODEL = "llama-3.3-70b-versatile";
 
+const getParticipantIds = (session) => {
+  const ids = Array.isArray(session?.participants) ? session.participants.map((value) => value?.toString()) : [];
+  const legacyParticipantId = session?.participant ? session.participant.toString() : null;
+
+  if (legacyParticipantId && !ids.includes(legacyParticipantId)) {
+    ids.push(legacyParticipantId);
+  }
+
+  return ids;
+};
+
 const normalizeDifficulty = (difficulty = "") => {
   const normalized = difficulty?.charAt(0).toUpperCase() + difficulty?.slice(1).toLowerCase();
   return allowedDifficulties.includes(normalized) ? normalized : "Medium";
@@ -295,6 +306,7 @@ export async function getActiveSession(_, res) {
     const sessions = await Session.find({ status: "active" })
       .populate("host", "name profileImage email clerkId")
       .populate("participant", "name profileImage email clerkId")
+      .populate("participants", "name profileImage email clerkId")
       .sort({ createdAt: -1 })
       .limit(20);
 
@@ -312,7 +324,7 @@ export async function getMyRecentSessions(req, res) {
     // get sessions where user is either host or participant
     const sessions = await Session.find({
       status: "completed",
-      $or: [{ host: userId }, { participant: userId }],
+      $or: [{ host: userId }, { participant: userId }, { participants: userId }],
     })
       .sort({ createdAt: -1 })
       .limit(20);
@@ -330,7 +342,8 @@ export async function getSessionById(req, res) {
 
     const session = await Session.findById(id)
       .populate("host", "name email profileImage clerkId")
-      .populate("participant", "name email profileImage clerkId");
+      .populate("participant", "name email profileImage clerkId")
+      .populate("participants", "name email profileImage clerkId");
 
     if (!session) return res.status(404).json({ message: "Session not found" });
 
@@ -344,8 +357,15 @@ export async function getSessionById(req, res) {
 export async function joinSession(req, res) {
   try {
     const { id } = req.params;
+    const { deviceId } = req.body || {};
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
+
+    if (!deviceId || !String(deviceId).trim()) {
+      return res.status(400).json({ message: "Device ID is required to join session" });
+    }
+
+    const normalizedDeviceId = String(deviceId).trim();
 
     const session = await Session.findById(id);
 
@@ -359,16 +379,54 @@ export async function joinSession(req, res) {
       return res.status(400).json({ message: "Host cannot join their own session as participant" });
     }
 
-    // check if session is already full - has a participant
-    if (session.participant) return res.status(409).json({ message: "Session is full" });
+    const currentParticipantIds = getParticipantIds(session);
+    const isAlreadyParticipant = currentParticipantIds.includes(userId.toString());
+    const existingLock = (Array.isArray(session.participantDeviceLocks) ? session.participantDeviceLocks : [])
+      .find((lock) => lock?.clerkId === clerkId || lock?.user?.toString() === userId.toString());
 
-    session.participant = userId;
+    if (existingLock && existingLock.deviceId !== normalizedDeviceId) {
+      return res.status(409).json({ message: "You already joined this session from another device" });
+    }
+
+    if (!existingLock) {
+      session.participantDeviceLocks = [
+        ...(Array.isArray(session.participantDeviceLocks) ? session.participantDeviceLocks : []),
+        {
+          user: userId,
+          clerkId,
+          deviceId: normalizedDeviceId,
+        },
+      ];
+    }
+
+    if (isAlreadyParticipant) {
+      await session.save();
+
+      const hydratedSession = await Session.findById(id)
+        .populate("host", "name email profileImage clerkId")
+        .populate("participant", "name email profileImage clerkId")
+        .populate("participants", "name email profileImage clerkId");
+
+      return res.status(200).json({ session: hydratedSession });
+    }
+
+    session.participants = Array.from(new Set([...currentParticipantIds, userId.toString()]));
+
+    if (!session.participant) {
+      session.participant = userId;
+    }
+
     await session.save();
 
     const channel = chatClient.channel("messaging", session.callId);
     await channel.addMembers([clerkId]);
 
-    res.status(200).json({ session });
+    const hydratedSession = await Session.findById(id)
+      .populate("host", "name email profileImage clerkId")
+      .populate("participant", "name email profileImage clerkId")
+      .populate("participants", "name email profileImage clerkId");
+
+    res.status(200).json({ session: hydratedSession });
   } catch (error) {
     console.log("Error in joinSession controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });

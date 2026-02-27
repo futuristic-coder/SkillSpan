@@ -48,7 +48,10 @@ function DashboardPage({ isDark, setIsDark }) {
   const isUserInSession = (session) => {
     if (!user.id) return false;
 
-    return session.host?.clerkId === user.id || session.participant?.clerkId === user.id;
+    const participants = Array.isArray(session.participants) ? session.participants : [];
+    const isInParticipants = participants.some((participant) => participant?.clerkId === user.id);
+
+    return session.host?.clerkId === user.id || session.participant?.clerkId === user.id || isInParticipants;
   };
 
   return (

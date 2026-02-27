@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   useEndSession,
@@ -18,6 +18,23 @@ import useIsMobile from "../hooks/useIsMobile";
 import useStreamClient from "../hooks/useStreamClient";
 import { StreamCall, StreamVideo } from "@stream-io/video-react-sdk";
 import VideoCallUI from "../components/VideoCallUI";
+
+const DEVICE_ID_KEY = "tb_device_id";
+
+const getOrCreateDeviceId = () => {
+  if (typeof window === "undefined") return "";
+
+  const existingDeviceId = localStorage.getItem(DEVICE_ID_KEY);
+  if (existingDeviceId) return existingDeviceId;
+
+  const generatedDeviceId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+  localStorage.setItem(DEVICE_ID_KEY, generatedDeviceId);
+  return generatedDeviceId;
+};
 
 const buildStdinFromExample = (exampleInput = "") => {
   if (!exampleInput) return "";
@@ -85,6 +102,7 @@ function SessionPage({ isDark, setIsDark }) {
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [stdin, setStdin] = useState("");
+  const hasValidatedJoinRef = useRef(false);
   const isMobile = useIsMobile();
 
   const {
@@ -97,8 +115,13 @@ function SessionPage({ isDark, setIsDark }) {
   const { mutate: endSession, isPending: isEndingSession } = useEndSession();
 
   const session = sessionData?.session;
+  const participantList = Array.isArray(session?.participants) ? session.participants : [];
+  const hasLegacyParticipant = !!session?.participant;
+  const participantCount = participantList.length || (hasLegacyParticipant ? 1 : 0);
   const isHost = session?.host?.clerkId === user?.id;
-  const isParticipant = session?.participant?.clerkId === user?.id;
+  const isParticipant =
+    participantList.some((participant) => participant?.clerkId === user?.id) ||
+    session?.participant?.clerkId === user?.id;
 
   const { call, channel, chatClient, isInitializingCall, streamClient } =
     useStreamClient(session, loadingSession, isHost, isParticipant);
@@ -120,12 +143,30 @@ function SessionPage({ isDark, setIsDark }) {
   // auto-join session if user is not already a participant and not the host
   useEffect(() => {
     if (!session || !user || loadingSession) return;
-    if (isHost || isParticipant) return;
+    if (isHost) return;
+    if (hasValidatedJoinRef.current) return;
 
-    joinSession(id, { onSuccess: refetch });
+    const deviceId = getOrCreateDeviceId();
+    if (!deviceId) return;
+
+    hasValidatedJoinRef.current = true;
+
+    joinSession(
+      { id, deviceId },
+      {
+        onSuccess: refetch,
+        onError: () => {
+          hasValidatedJoinRef.current = false;
+        },
+      },
+    );
 
     // remove the joinSessionMutation, refetch from dependencies to avoid infinite loop
   }, [session, user, loadingSession, isHost, isParticipant, id, joinSession, refetch]);
+
+  useEffect(() => {
+    hasValidatedJoinRef.current = false;
+  }, [id, user?.id]);
 
   // redirect the "participant" when session ends
   useEffect(() => {
@@ -208,7 +249,7 @@ function SessionPage({ isDark, setIsDark }) {
               </p>
             )}
             <p className={isDark ? "mt-2 text-sm text-slate-400" : "mt-2 text-sm text-slate-600"}>
-              Host: {session?.host?.name || "Loading..."} • {session?.participant ? 2 : 1}/2 participants
+              Host: {session?.host?.name || "Loading..."} • {participantCount + 1} participants
             </p>
           </div>
 

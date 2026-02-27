@@ -35,7 +35,11 @@ function RecentSessions({ isDark, sessions, isLoading }) {
               <Loader className={isDark ? "h-10 w-10 animate-spin text-indigo-300" : "h-10 w-10 animate-spin text-indigo-600"} />
             </div>
           ) : sessions.length > 0 ? (
-            sessions.map((session) => (
+            sessions.map((session) => {
+              const participants = Array.isArray(session.participants) ? session.participants : [];
+              const participantCount = participants.length || (session.participant ? 1 : 0);
+
+              return (
               <div
                 key={session._id}
                 className={`relative rounded-xl border p-3.5 transition sm:p-4 ${
@@ -90,8 +94,8 @@ function RecentSessions({ isDark, sessions, isLoading }) {
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       <span>
-                        {session.participant ? "2" : "1"} participant
-                        {session.participant ? "s" : ""}
+                        {participantCount + 1} participant
+                        {participantCount + 1 > 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>
@@ -104,7 +108,8 @@ function RecentSessions({ isDark, sessions, isLoading }) {
                   </div>
                 </div>
               </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full text-center py-16">
               <div className={isDark ? "mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20" : "mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-100 to-violet-100"}>
