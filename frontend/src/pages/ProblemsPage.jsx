@@ -1,7 +1,9 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 
 import { PROBLEMS } from "../data/problems";
+import { useGenerateProblem } from "../hooks/useSessions";
 import {
   BookOpenIcon,
   ChevronRightIcon,
@@ -10,6 +12,22 @@ import {
   SparklesIcon,
   TargetIcon,
 } from "lucide-react";
+
+const GENERATED_PROBLEMS_KEY = "generatedProblems";
+
+const getStoredGeneratedProblems = () => {
+  try {
+    const raw = localStorage.getItem(GENERATED_PROBLEMS_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((item) => item?.id && item?.title && item?.description?.text);
+  } catch {
+    return [];
+  }
+};
 
 const getDifficultyBadgeClass = (difficulty, isDark) => {
   switch (difficulty?.toLowerCase()) {
@@ -33,11 +51,41 @@ const getDifficultyBadgeClass = (difficulty, isDark) => {
 };
 
 function ProblemsPage({ isDark, setIsDark }) {
-  const problems = Object.values(PROBLEMS);
+  const [topic, setTopic] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("Medium");
+  const [generatedProblems, setGeneratedProblems] = useState(() => getStoredGeneratedProblems());
+  const { mutateAsync: generateProblem, isPending: isGenerating } = useGenerateProblem();
+
+  const problems = useMemo(
+    () => [...generatedProblems, ...Object.values(PROBLEMS)],
+    [generatedProblems]
+  );
 
   const easyProblemsCount = problems.filter((p) => p.difficulty === "Easy").length;
   const mediumProblemsCount = problems.filter((p) => p.difficulty === "Medium").length;
   const hardProblemsCount = problems.filter((p) => p.difficulty === "Hard").length;
+
+  const handleGenerate = async () => {
+    if (!topic.trim() || isGenerating) return;
+
+    const response = await generateProblem({
+      topic: topic.trim(),
+      difficulty: selectedDifficulty,
+    });
+
+    const generatedProblem = response?.problem;
+    if (!generatedProblem) return;
+
+    const newProblem = {
+      ...generatedProblem,
+      id: `ai-${Date.now()}`,
+    };
+
+    const nextGeneratedProblems = [newProblem, ...generatedProblems].slice(0, 30);
+    setGeneratedProblems(nextGeneratedProblems);
+    localStorage.setItem(GENERATED_PROBLEMS_KEY, JSON.stringify(nextGeneratedProblems));
+    setTopic("");
+  };
 
   return (
     <div className={isDark ? "min-h-screen bg-slate-950 text-slate-100" : "min-h-screen bg-slate-100 text-slate-900"}>
@@ -67,6 +115,37 @@ function ProblemsPage({ isDark, setIsDark }) {
             <div className={isDark ? "inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2 text-sm text-slate-300" : "inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"}>
               <TargetIcon className={isDark ? "size-4 text-indigo-300" : "size-4 text-indigo-600"} />
               Solve consistently, improve faster.
+            </div>
+          </div>
+
+          <div className={isDark ? "mt-5 rounded-xl border border-white/10 bg-slate-900/60 p-3 sm:p-4" : "mt-5 rounded-xl border border-slate-300 bg-slate-50 p-3 sm:p-4"}>
+            <p className={isDark ? "mb-2 text-sm font-semibold text-slate-200" : "mb-2 text-sm font-semibold text-slate-800"}>Generate a new AI problem</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:gap-3">
+              <input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="Type a topic (e.g. Graph shortest path)"
+                className={isDark ? "sm:col-span-7 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none" : "sm:col-span-7 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"}
+              />
+
+              <select
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value)}
+                className={isDark ? "sm:col-span-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-indigo-400 focus:outline-none" : "sm:col-span-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"}
+              >
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={isGenerating || !topic.trim()}
+                className={isDark ? "sm:col-span-3 rounded-lg border border-indigo-400/40 bg-indigo-500/20 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-50" : "sm:col-span-3 rounded-lg border border-indigo-300 bg-indigo-100 px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"}
+              >
+                {isGenerating ? "Generating..." : "Generate"}
+              </button>
             </div>
           </div>
         </section>

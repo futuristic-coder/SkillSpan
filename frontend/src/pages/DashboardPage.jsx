@@ -14,12 +14,14 @@ function DashboardPage({ isDark, setIsDark }) {
   const navigate = useNavigate();
   const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [roomConfig, setRoomConfig] = useState({ problem: "", difficulty: "" });
+  const [roomConfig, setRoomConfig] = useState({ problem: "", difficulty: "", customProblem: null });
 
   const createSessionMutation = useCreateSession();
 
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
+
+  const resetRoomConfig = () => setRoomConfig({ problem: "", difficulty: "", customProblem: null });
 
   const handleCreateRoom = () => {
     if (!roomConfig.problem || !roomConfig.difficulty) return;
@@ -28,10 +30,12 @@ function DashboardPage({ isDark, setIsDark }) {
       {
         problem: roomConfig.problem,
         difficulty: roomConfig.difficulty.toLowerCase(),
+        customProblem: roomConfig.customProblem,
       },
       {
         onSuccess: (data) => {
           setShowCreateModal(false);
+          resetRoomConfig();
           navigate(`/session/${data.session._id}`);
         },
       }
@@ -79,7 +83,10 @@ function DashboardPage({ isDark, setIsDark }) {
       <CreateSessionModal
         isDark={isDark}
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          resetRoomConfig();
+        }}
         roomConfig={roomConfig}
         setRoomConfig={setRoomConfig}
         onCreateRoom={handleCreateRoom}

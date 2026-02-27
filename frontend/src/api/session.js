@@ -6,6 +6,11 @@ export const sessionApi = {
     return response.data;
   },
 
+  generateProblem: async (data) => {
+    const response = await axiosInstance.post("/sessions/generate-problem", data);
+    return response.data;
+  },
+
   getActiveSessions: async () => {
     const response = await axiosInstance.get("/sessions/active");
     return response.data;

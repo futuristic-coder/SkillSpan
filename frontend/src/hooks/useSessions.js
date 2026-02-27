@@ -13,6 +13,16 @@ export const useCreateSession = () => {
   return result;
 };
 
+export const useGenerateProblem = () => {
+  const result = useMutation({
+    mutationKey: ["generateProblem"],
+    mutationFn: sessionApi.generateProblem,
+    onError: (error) => toast.error(error.response?.data?.message || "Failed to generate problem"),
+  });
+
+  return result;
+};
+
 export const useActiveSessions = () => {
   const result = useQuery({
     queryKey: ["activeSessions"],

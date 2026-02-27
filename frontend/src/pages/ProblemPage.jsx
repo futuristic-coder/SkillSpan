@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { PROBLEMS } from "../data/problems";
 import Navbar from "../components/Navbar";
@@ -13,22 +13,86 @@ import useIsMobile from "../hooks/useIsMobile";
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 
+const GENERATED_PROBLEMS_KEY = "generatedProblems";
+
+const getStoredGeneratedProblems = () => {
+  try {
+    const raw = localStorage.getItem(GENERATED_PROBLEMS_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((item) => item?.id && item?.title && item?.description?.text);
+  } catch {
+    return [];
+  }
+};
+
+const buildStdinFromExample = (exampleInput = "") => {
+  if (!exampleInput) return "";
+
+  const normalized = String(exampleInput)
+    .replace(/\r/g, "")
+    .replace(/\bnums\s*=\s*/gi, "")
+    .replace(/\barr\s*=\s*/gi, "")
+    .replace(/\barray\s*=\s*/gi, "")
+    .replace(/\btarget\s*=\s*/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const bracketMatch = normalized.match(/\[([^\]]*)\]/);
+  const lines = [];
+
+  if (bracketMatch) {
+    const arr = bracketMatch[1]
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    if (arr.length) {
+      lines.push(String(arr.length));
+      lines.push(arr.join(" "));
+    }
+  }
+
+  const afterArray = bracketMatch
+    ? normalized.slice(bracketMatch.index + bracketMatch[0].length).trim()
+    : normalized;
+
+  const numberTokens = afterArray.match(/-?\d+/g) || [];
+  numberTokens.forEach((token) => lines.push(token));
+
+  return lines.join("\n").trim();
+};
+
 function ProblemPage({ isDark, setIsDark }) {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const currentProblemId = id && PROBLEMS[id] ? id : "two-sum";
+  const allProblemsById = useMemo(
+    () => ({
+      ...PROBLEMS,
+      ...Object.fromEntries(getStoredGeneratedProblems().map((problem) => [problem.id, problem])),
+    }),
+    []
+  );
+
+  const currentProblemId = id && allProblemsById[id] ? id : "two-sum";
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [codeByProblemLanguage, setCodeByProblemLanguage] = useState({});
+  const [stdinByProblemLanguage, setStdinByProblemLanguage] = useState({});
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const isMobile = useIsMobile();
 
-  const currentProblem = PROBLEMS[currentProblemId];
+  const currentProblem = allProblemsById[currentProblemId];
 
   const codeKey = `${currentProblemId}:${selectedLanguage}`;
+  const stdinKey = `${currentProblemId}:${selectedLanguage}`;
   const code =
     codeByProblemLanguage[codeKey] ?? currentProblem.starterCode[selectedLanguage];
+  const stdin = stdinByProblemLanguage[stdinKey] ?? "";
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
@@ -37,6 +101,30 @@ function ProblemPage({ isDark, setIsDark }) {
   };
 
   const handleProblemChange = (newProblemId) => navigate(`/problem/${newProblemId}`);
+
+  const handleResetCode = () => {
+    const starter = currentProblem.starterCode[selectedLanguage] || "";
+    setCodeByProblemLanguage((prev) => ({
+      ...prev,
+      [codeKey]: starter,
+    }));
+  };
+
+  const handleAutofillInput = () => {
+    const firstExampleInput = currentProblem?.examples?.[0]?.input || "";
+    const generated = buildStdinFromExample(firstExampleInput);
+
+    if (!generated) {
+      toast.error("No example input available to auto-fill.");
+      return;
+    }
+
+    setStdinByProblemLanguage((prev) => ({
+      ...prev,
+      [stdinKey]: generated,
+    }));
+    toast.success("Input auto-filled from Example 1.");
+  };
 
   const triggerConfetti = () => {
     confetti({
@@ -78,16 +166,29 @@ function ProblemPage({ isDark, setIsDark }) {
   };
 
   const handleRunCode = async () => {
+    const readsStdin = /(Scanner|System\.in|nextInt\(|nextLine\(|input\(|readline\()/i.test(code);
+
+    if (readsStdin && !stdin.trim()) {
+      toast.error("This code expects input. Fill the Custom Input (stdin) box first.");
+      return;
+    }
+
     setIsRunning(true);
     setOutput(null);
 
-    const result = await executeCode(selectedLanguage, code);
+    const result = await executeCode(selectedLanguage, code, stdin);
     setOutput(result);
     setIsRunning(false);
 
     // check if code executed successfully and matches expected output
+    const isGeneratedProblem = currentProblemId.startsWith("ai-");
 
     if (result.success) {
+      if (isGeneratedProblem) {
+        toast.success("Code executed successfully!");
+        return;
+      }
+
       const expectedOutput = currentProblem.expectedOutput[selectedLanguage];
       const testsPassed = checkIfTestsPassed(result.output, expectedOutput);
 
@@ -120,7 +221,7 @@ function ProblemPage({ isDark, setIsDark }) {
                 problem={currentProblem}
                 currentProblemId={currentProblemId}
                 onProblemChange={handleProblemChange}
-                allProblems={Object.values(PROBLEMS)}
+                allProblems={Object.values(allProblemsById)}
               />
             </div>
 
@@ -137,6 +238,15 @@ function ProblemPage({ isDark, setIsDark }) {
                     [codeKey]: value || "",
                   }))
                 }
+                stdin={stdin}
+                onStdinChange={(value) =>
+                  setStdinByProblemLanguage((prev) => ({
+                    ...prev,
+                    [stdinKey]: value,
+                  }))
+                }
+                onResetCode={handleResetCode}
+                onAutofillInput={handleAutofillInput}
                 onRunCode={handleRunCode}
               />
             </div>
@@ -155,7 +265,7 @@ function ProblemPage({ isDark, setIsDark }) {
                   problem={currentProblem}
                   currentProblemId={currentProblemId}
                   onProblemChange={handleProblemChange}
-                  allProblems={Object.values(PROBLEMS)}
+                  allProblems={Object.values(allProblemsById)}
                 />
               </div>
             </Panel>
@@ -180,6 +290,15 @@ function ProblemPage({ isDark, setIsDark }) {
                           [codeKey]: value || "",
                         }))
                       }
+                      stdin={stdin}
+                      onStdinChange={(value) =>
+                        setStdinByProblemLanguage((prev) => ({
+                          ...prev,
+                          [stdinKey]: value,
+                        }))
+                      }
+                      onResetCode={handleResetCode}
+                      onAutofillInput={handleAutofillInput}
                       onRunCode={handleRunCode}
                     />
                   </Panel>

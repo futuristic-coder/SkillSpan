@@ -19,6 +19,43 @@ import useStreamClient from "../hooks/useStreamClient";
 import { StreamCall, StreamVideo } from "@stream-io/video-react-sdk";
 import VideoCallUI from "../components/VideoCallUI";
 
+const buildStdinFromExample = (exampleInput = "") => {
+  if (!exampleInput) return "";
+
+  const normalized = String(exampleInput)
+    .replace(/\r/g, "")
+    .replace(/\bnums\s*=\s*/gi, "")
+    .replace(/\barr\s*=\s*/gi, "")
+    .replace(/\barray\s*=\s*/gi, "")
+    .replace(/\btarget\s*=\s*/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const bracketMatch = normalized.match(/\[([^\]]*)\]/);
+  const lines = [];
+
+  if (bracketMatch) {
+    const arr = bracketMatch[1]
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    if (arr.length) {
+      lines.push(String(arr.length));
+      lines.push(arr.join(" "));
+    }
+  }
+
+  const afterArray = bracketMatch
+    ? normalized.slice(bracketMatch.index + bracketMatch[0].length).trim()
+    : normalized;
+
+  const numberTokens = afterArray.match(/-?\d+/g) || [];
+  numberTokens.forEach((token) => lines.push(token));
+
+  return lines.join("\n").trim();
+};
+
 const getDifficultyThemeClass = (difficulty, isDark) => {
   const baseClasses = "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold";
   switch (difficulty?.toLowerCase()) {
@@ -47,6 +84,7 @@ function SessionPage({ isDark, setIsDark }) {
   const { user } = useUser();
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [stdin, setStdin] = useState("");
   const isMobile = useIsMobile();
 
   const {
@@ -66,7 +104,9 @@ function SessionPage({ isDark, setIsDark }) {
     useStreamClient(session, loadingSession, isHost, isParticipant);
 
   // find the problem data based on session problem title
-  const problemData = session?.problem
+  const problemData = session?.customProblem
+    ? session.customProblem
+    : session?.problem
     ? Object.values(PROBLEMS).find((p) => p.title === session.problem)
     : null;
 
@@ -104,12 +144,41 @@ function SessionPage({ isDark, setIsDark }) {
   };
 
   const handleRunCode = async () => {
+    const readsStdin = /(Scanner|System\.in|nextInt\(|nextLine\(|input\(|readline\()/i.test(effectiveCode);
+
+    if (readsStdin && !stdin.trim()) {
+      setOutput({
+        success: false,
+        error: "This code expects input. Fill the Custom Input (stdin) box first.",
+      });
+      return;
+    }
+
     setIsRunning(true);
     setOutput(null);
 
-    const result = await executeCode(selectedLanguage, effectiveCode);
+    const result = await executeCode(selectedLanguage, effectiveCode, stdin);
     setOutput(result);
     setIsRunning(false);
+  };
+
+  const handleResetCode = () => {
+    setCode(starterCodeForLanguage);
+  };
+
+  const handleAutofillInput = () => {
+    const firstExampleInput = problemData?.examples?.[0]?.input || "";
+    const generated = buildStdinFromExample(firstExampleInput);
+
+    if (!generated) {
+      setOutput({
+        success: false,
+        error: "No example input available to auto-fill.",
+      });
+      return;
+    }
+
+    setStdin(generated);
   };
 
   const handleEndSession = () => {
@@ -285,6 +354,10 @@ function SessionPage({ isDark, setIsDark }) {
                 isRunning={isRunning}
                 onLanguageChange={handleLanguageChange}
                 onCodeChange={(value) => setCode(value || "")}
+                stdin={stdin}
+                onStdinChange={setStdin}
+                onResetCode={handleResetCode}
+                onAutofillInput={handleAutofillInput}
                 onRunCode={handleRunCode}
               />
             </div>
@@ -319,6 +392,10 @@ function SessionPage({ isDark, setIsDark }) {
                         isRunning={isRunning}
                         onLanguageChange={handleLanguageChange}
                         onCodeChange={(value) => setCode(value || "")}
+                        stdin={stdin}
+                        onStdinChange={setStdin}
+                        onResetCode={handleResetCode}
+                        onAutofillInput={handleAutofillInput}
                         onRunCode={handleRunCode}
                       />
                     </Panel>

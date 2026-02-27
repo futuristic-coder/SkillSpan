@@ -28,6 +28,10 @@ const sessionSchema = new mongoose.Schema({
     callId:{
         type:String,
         default:""
+    },
+    customProblem:{
+        type:mongoose.Schema.Types.Mixed,
+        default:null
     }
 },{timestamps:true})
 

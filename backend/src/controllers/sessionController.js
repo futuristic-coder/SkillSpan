@@ -1,9 +1,150 @@
 import { chatClient, streamClient } from "../config/stream.js";
+import { ENV } from "../config/env.js";
 import Session from "../models/Session.js";
+
+const allowedDifficulties = ["Easy", "Medium", "Hard"];
+const GROQ_PROBLEM_MODEL = "llama-3.3-70b-versatile";
+
+const normalizeDifficulty = (difficulty = "") => {
+  const normalized = difficulty?.charAt(0).toUpperCase() + difficulty?.slice(1).toLowerCase();
+  return allowedDifficulties.includes(normalized) ? normalized : "Medium";
+};
+
+const stripMarkdownFence = (value = "") =>
+  value.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+
+const buildFallbackProblem = (topic, difficulty = "Medium") => {
+  const title = topic?.trim() || "Custom Coding Problem";
+  const safeDifficulty = normalizeDifficulty(difficulty);
+
+  return {
+    title,
+    difficulty: safeDifficulty,
+    category: "Algorithmic Thinking",
+    description: {
+      text: `Design and implement a function for: ${title}.`,
+      notes: [
+        "Return an efficient solution.",
+        "Explain time and space complexity.",
+      ],
+    },
+    examples: [
+      {
+        input: "input = [example]",
+        output: "expectedOutput",
+        explanation: "Provide logic to transform input into expectedOutput.",
+      },
+    ],
+    constraints: ["1 ≤ n ≤ 10^5", "Optimize for time complexity"],
+    starterCode: {
+      javascript: `function solve(input) {\n  // Write your solution\n}\n\nconsole.log(solve([1,2,3]));`,
+      python: `def solve(input):\n    # Write your solution\n    pass\n\nprint(solve([1,2,3]))`,
+      java: `class Solution {\n    public static String solve(int[] input) {\n        // Write your solution\n        return \"\";\n    }\n\n    public static void main(String[] args) {\n        System.out.println(solve(new int[]{1,2,3}));\n    }\n}`,
+    },
+    expectedOutput: {
+      javascript: "expectedOutput",
+      python: "expectedOutput",
+      java: "expectedOutput",
+    },
+  };
+};
+
+const sanitizeGeneratedProblem = (problem, topic, difficulty) => {
+  const fallback = buildFallbackProblem(topic, difficulty);
+  const safeDifficulty = normalizeDifficulty(problem?.difficulty || difficulty || fallback.difficulty);
+
+  return {
+    title: problem?.title || fallback.title,
+    difficulty: safeDifficulty,
+    category: problem?.category || fallback.category,
+    description: {
+      text: problem?.description?.text || fallback.description.text,
+      notes: Array.isArray(problem?.description?.notes) ? problem.description.notes : fallback.description.notes,
+    },
+    examples: Array.isArray(problem?.examples) && problem.examples.length ? problem.examples : fallback.examples,
+    constraints: Array.isArray(problem?.constraints) && problem.constraints.length ? problem.constraints : fallback.constraints,
+    starterCode: {
+      javascript: problem?.starterCode?.javascript || fallback.starterCode.javascript,
+      python: problem?.starterCode?.python || fallback.starterCode.python,
+      java: problem?.starterCode?.java || fallback.starterCode.java,
+    },
+    expectedOutput: {
+      javascript: problem?.expectedOutput?.javascript || fallback.expectedOutput.javascript,
+      python: problem?.expectedOutput?.python || fallback.expectedOutput.python,
+      java: problem?.expectedOutput?.java || fallback.expectedOutput.java,
+    },
+  };
+};
+
+const fetchGeneratedProblem = async (topic, difficulty) => {
+  if (!ENV.GROQ_API_KEY) {
+    return buildFallbackProblem(topic, difficulty);
+  }
+
+  const prompt = `Generate one coding interview problem as strict JSON only (no markdown).\n\nTopic: ${topic}\nPreferred difficulty: ${difficulty || "Medium"}\n\nRequired JSON shape:\n{\n  "title": "string",\n  "difficulty": "Easy|Medium|Hard",\n  "category": "string",\n  "description": { "text": "string", "notes": ["string"] },\n  "examples": [{ "input": "string", "output": "string", "explanation": "string" }],\n  "constraints": ["string"],\n  "starterCode": { "javascript": "string", "python": "string", "java": "string" },\n  "expectedOutput": { "javascript": "string", "python": "string", "java": "string" }\n}\n\nRules:\n- Keep examples realistic and executable.\n- Keep starterCode complete and compilable.\n- starterCode must be NON-INTERACTIVE (no stdin, no prompts, no Scanner/System.in, no input(), no readline()).\n- starterCode must include built-in test calls (console.log / print / System.out.println) so it runs directly.\n- expectedOutput must exactly match what starterCode prints for each language.`;
+
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ENV.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_PROBLEM_MODEL,
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content:
+              "You generate structured coding interview problems and must return valid JSON only.",
+          },
+          { role: "user", content: prompt },
+        ],
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    return buildFallbackProblem(topic, difficulty);
+  }
+
+  const data = await response.json();
+  const rawText = data?.choices?.[0]?.message?.content;
+
+  if (!rawText) {
+    return buildFallbackProblem(topic, difficulty);
+  }
+
+  try {
+    const parsed = JSON.parse(stripMarkdownFence(rawText));
+    return sanitizeGeneratedProblem(parsed, topic, difficulty);
+  } catch {
+    return buildFallbackProblem(topic, difficulty);
+  }
+};
+
+export async function generateProblem(req, res) {
+  try {
+    const { topic, difficulty } = req.body;
+
+    if (!topic?.trim()) {
+      return res.status(400).json({ message: "Topic is required" });
+    }
+
+    const generatedProblem = await fetchGeneratedProblem(topic.trim(), difficulty);
+    res.status(200).json({ problem: generatedProblem });
+  } catch (error) {
+    console.log("Error in generateProblem controller:", error.message);
+    res.status(500).json({ message: "Failed to generate problem" });
+  }
+}
 
 export async function createSession(req, res) {
   try {
-    const { problem, difficulty } = req.body;
+    const { problem, difficulty, customProblem } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
 
@@ -11,10 +152,9 @@ export async function createSession(req, res) {
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
-    const normalizedDifficulty =
-      difficulty?.charAt(0).toUpperCase() + difficulty?.slice(1).toLowerCase();
+    const normalizedDifficulty = normalizeDifficulty(difficulty);
 
-    if (!["Easy", "Medium", "Hard"].includes(normalizedDifficulty)) {
+    if (!allowedDifficulties.includes(normalizedDifficulty)) {
       return res.status(400).json({ message: "Difficulty must be Easy, Medium, or Hard" });
     }
 
@@ -27,6 +167,7 @@ export async function createSession(req, res) {
       difficulty: normalizedDifficulty,
       host: userId,
       callId,
+      customProblem: customProblem || null,
     });
 
     // create stream video call

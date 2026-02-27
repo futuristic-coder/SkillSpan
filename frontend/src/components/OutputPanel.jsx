@@ -1,4 +1,12 @@
 function OutputPanel({ isDark, output }) {
+  const scannerInputHint =
+    output &&
+    !output.success &&
+    typeof output.error === "string" &&
+    output.error.includes("NoSuchElementException")
+      ? "Input ended early. Provide all tokens expected by Scanner in Custom Input (stdin)."
+      : null;
+
   return (
     <div className={isDark ? "flex h-full flex-col bg-slate-950" : "flex h-full flex-col bg-white"}>
       <div className={isDark ? "border-b border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold" : "border-b border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold"}>
@@ -17,6 +25,9 @@ function OutputPanel({ isDark, output }) {
               </pre>
             )}
             <pre className="whitespace-pre-wrap font-mono text-sm text-rose-400">{output.error}</pre>
+            {scannerInputHint && (
+              <p className={isDark ? "mt-2 text-xs text-amber-300" : "mt-2 text-xs text-amber-700"}>{scannerInputHint}</p>
+            )}
           </div>
         )}
       </div>
