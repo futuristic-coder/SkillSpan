@@ -337,9 +337,9 @@ function SessionPage({ isDark, setIsDark }) {
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col lg:h-full">
-      <Navbar isDark={isDark} setIsDark={setIsDark} />
+      <Navbar isDark={isDark} setIsDark={setIsDark} fixedTop />
 
-      <div className="flex-1 overflow-visible px-3 pb-3 pt-3 sm:px-4 lg:overflow-hidden lg:px-8 lg:pb-6">
+      <div className="flex-1 overflow-visible px-3 pb-3 pt-20 sm:px-4 lg:overflow-hidden lg:px-8 lg:pb-6">
         {isMobile ? (
           <div className="space-y-3 pb-2">
             <div className={isDark ? "overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-sm" : "overflow-hidden rounded-2xl border border-slate-300 bg-white/90 backdrop-blur-sm"}>
@@ -366,7 +366,7 @@ function SessionPage({ isDark, setIsDark }) {
               <OutputPanel isDark={isDark} output={output} />
             </div>
 
-            <div className={isDark ? "h-[58vh] min-h-[340px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 p-3 backdrop-blur-sm" : "h-[58vh] min-h-[340px] overflow-hidden rounded-2xl border border-slate-300 bg-white/90 p-3 backdrop-blur-sm"}>
+            <div className={isDark ? "h-[58vh] min-h-[340px] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/70 p-3 backdrop-blur-sm" : "h-[58vh] min-h-[340px] overflow-y-auto rounded-2xl border border-slate-300 bg-white/90 p-3 backdrop-blur-sm"}>
               {videoContent}
             </div>
           </div>

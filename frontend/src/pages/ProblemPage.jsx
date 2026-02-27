@@ -210,9 +210,9 @@ function ProblemPage({ isDark, setIsDark }) {
         <div className={isDark ? "absolute bottom-0 right-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" : "absolute bottom-0 right-0 h-72 w-72 rounded-full bg-cyan-300/40 blur-3xl"} />
       </div>
 
-      <Navbar isDark={isDark} setIsDark={setIsDark} />
+      <Navbar isDark={isDark} setIsDark={setIsDark} fixedTop />
 
-      <div className="flex-1 overflow-visible px-3 pb-3 pt-3 sm:px-4 lg:overflow-hidden lg:px-8 lg:pb-6">
+      <div className="flex-1 overflow-visible px-3 pb-3 pt-20 sm:px-4 lg:overflow-hidden lg:px-8 lg:pb-6">
         {isMobile ? (
           <div className="space-y-3 pb-2">
             <div className={isDark ? "overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-sm" : "overflow-hidden rounded-2xl border border-slate-300 bg-white/90 backdrop-blur-sm"}>

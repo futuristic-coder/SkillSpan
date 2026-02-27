@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router";
 import { BookOpenIcon, LayoutDashboardIcon, MoonIcon, SunIcon } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
 
-function Navbar({ isDark, setIsDark }) {
+function Navbar({ isDark, setIsDark, fixedTop = false }) {
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
@@ -10,7 +10,11 @@ function Navbar({ isDark, setIsDark }) {
   return (
     <nav
       className={
-        isDark
+        fixedTop
+          ? isDark
+            ? "fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl"
+            : "fixed left-0 right-0 top-0 z-50 border-b border-slate-300/90 bg-white/85 backdrop-blur-xl"
+          : isDark
           ? "sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl"
           : "sticky top-0 z-50 border-b border-slate-300/90 bg-white/85 backdrop-blur-xl"
       }

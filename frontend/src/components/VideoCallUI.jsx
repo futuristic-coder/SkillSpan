@@ -1,6 +1,7 @@
 import {
   CallControls,
   CallingState,
+  ParticipantView,
   SpeakerLayout,
   useCallStateHooks,
 } from "@stream-io/video-react-sdk";
@@ -16,9 +17,10 @@ import "stream-chat-react/dist/css/v2/index.css";
 
 function VideoCallUI({ isDark, chatClient, channel }) {
   const navigate = useNavigate();
-  const { useCallCallingState, useParticipantCount } = useCallStateHooks();
+  const { useCallCallingState, useParticipantCount, useLocalParticipant } = useCallStateHooks();
   const callingState = useCallCallingState();
   const participantCount = useParticipantCount();
+  const localParticipant = useLocalParticipant();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const isMobile = useIsMobile();
@@ -38,7 +40,8 @@ function VideoCallUI({ isDark, chatClient, channel }) {
 
     const handleNewMessage = (event) => {
       const senderId = event?.user?.id;
-      if (senderId && chatClient.userID && senderId === chatClient.userID) return;
+      const currentUserId = chatClient?.userID || chatClient?.user?.id;
+      if (senderId && currentUserId && senderId === currentUserId) return;
 
       if (!isChatOpen) {
         setUnreadCount((prev) => prev + 1);
@@ -84,8 +87,8 @@ function VideoCallUI({ isDark, chatClient, channel }) {
   }
 
   return (
-    <div className="relative flex h-full flex-col gap-3 md:flex-row str-video">
-      <div className="flex-1 flex flex-col gap-3">
+    <div className={`session-video-ui ${isDark ? "session-video-ui--dark" : "session-video-ui--light"} relative flex h-full min-h-0 flex-col gap-3 md:flex-row str-video`}>
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         {/* Participants count badge and Chat Toggle */}
         <div className={isDark ? "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 p-3" : "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white p-3"}>
           <div className="flex items-center gap-2">
@@ -120,11 +123,20 @@ function VideoCallUI({ isDark, chatClient, channel }) {
           </div>
         </div>
 
-        <div className={isDark ? "relative min-h-[280px] flex-1 overflow-hidden rounded-xl border border-white/10 bg-slate-900" : "relative min-h-[280px] flex-1 overflow-hidden rounded-xl border border-slate-300 bg-slate-100"}>
+        <div className={isDark ? "relative h-[42vh] min-h-[220px] overflow-hidden rounded-xl border border-white/10 bg-slate-900 md:h-auto md:min-h-[280px] md:flex-1" : "relative h-[42vh] min-h-[220px] overflow-hidden rounded-xl border border-slate-300 bg-slate-100 md:h-auto md:min-h-[280px] md:flex-1"}>
           <SpeakerLayout participantsBarPosition="bottom" />
+
+          {isMobile && localParticipant && (
+            <div className={isDark ? "session-self-preview pointer-events-none absolute bottom-3 right-3 z-20 aspect-[3/4] w-24 overflow-hidden rounded-xl border border-white/25 bg-slate-900 shadow-xl" : "session-self-preview pointer-events-none absolute bottom-3 right-3 z-20 aspect-[3/4] w-24 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-lg"}>
+              <ParticipantView participant={localParticipant} />
+              <div className={isDark ? "absolute left-1.5 top-1.5 rounded-md bg-slate-950/80 px-1.5 py-0.5 text-[10px] font-semibold text-white" : "absolute left-1.5 top-1.5 rounded-md bg-slate-900/75 px-1.5 py-0.5 text-[10px] font-semibold text-white"}>
+                You
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className={isDark ? "session-call-controls relative z-30 flex justify-center rounded-xl border border-white/10 bg-white/5 p-3" : "session-call-controls relative z-30 flex justify-center rounded-xl border border-slate-300 bg-white p-3"}>
+        <div className={isDark ? "session-call-controls session-call-controls--dark sticky bottom-0 z-30 mt-1 flex justify-center rounded-xl border border-white/10 bg-slate-900/90 p-3 backdrop-blur-sm md:static md:bg-white/5 md:backdrop-blur-0" : "session-call-controls session-call-controls--light sticky bottom-0 z-30 mt-1 flex justify-center rounded-xl border border-slate-300 bg-white/95 p-3 backdrop-blur-sm md:static md:bg-white md:backdrop-blur-0"}>
           <CallControls onLeave={() => navigate("/dashboard")} />
         </div>
       </div>
@@ -148,8 +160,8 @@ function VideoCallUI({ isDark, chatClient, channel }) {
             } ${
               isMobile
                 ? isChatOpen
-                  ? "fixed inset-x-3 bottom-3 z-40 h-[70vh] max-h-[560px] translate-y-0 opacity-100 shadow-2xl"
-                  : "pointer-events-none fixed inset-x-3 bottom-3 z-40 h-[70vh] max-h-[560px] translate-y-4 opacity-0"
+                  ? "fixed inset-x-2 bottom-2 top-20 z-40 h-auto max-h-none translate-y-0 opacity-100 shadow-2xl"
+                  : "pointer-events-none fixed inset-x-2 bottom-2 top-20 z-40 h-auto max-h-none translate-y-6 opacity-0"
                 : isChatOpen
                 ? "z-20 w-80 shrink-0 self-stretch opacity-100"
                 : "pointer-events-none z-20 w-0 shrink-0 self-stretch opacity-0"
@@ -160,8 +172,9 @@ function VideoCallUI({ isDark, chatClient, channel }) {
                 <div className={isDark ? "session-chat-header flex items-center justify-between border-b border-white/10 bg-slate-950 p-3" : "session-chat-header flex items-center justify-between border-b border-slate-300 bg-slate-50 p-3"}>
                   {isMobile ? (
                     <button
+                      type="button"
                       onClick={handleCloseChat}
-                      className={isDark ? "inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-100" : "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"}
+                      className={isDark ? "inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-white" : "inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700"}
                       title="Back to call"
                     >
                       <ChevronLeftIcon className="size-4" />

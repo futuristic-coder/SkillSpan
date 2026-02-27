@@ -1,7 +1,21 @@
 import { Code2Icon, LoaderIcon, PlusIcon, SparklesIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PROBLEMS } from "../data/problems";
 import { useGenerateProblem } from "../hooks/useSessions";
+
+const GENERATED_PROBLEMS_KEY = "generatedProblems";
+
+const getStoredGeneratedProblems = () => {
+  try {
+    const raw = localStorage.getItem(GENERATED_PROBLEMS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => item?.id && item?.title && item?.description?.text);
+  } catch {
+    return [];
+  }
+};
 
 function CreateSessionModal({
   isDark,
@@ -13,8 +27,25 @@ function CreateSessionModal({
   isCreating,
 }) {
   const problems = Object.values(PROBLEMS);
+  const [generatedProblems, setGeneratedProblems] = useState(() => getStoredGeneratedProblems());
   const [topic, setTopic] = useState("");
   const generateProblemMutation = useGenerateProblem();
+
+  const allProblems = useMemo(() => {
+    return [
+      ...generatedProblems.map((problem) => ({ ...problem, source: "ai" })),
+      ...problems.map((problem) => ({ ...problem, source: "static" })),
+    ];
+  }, [generatedProblems, problems]);
+
+  const selectedOptionValue = useMemo(() => {
+    if (roomConfig.customProblem?.id) {
+      return `ai:${roomConfig.customProblem.id}`;
+    }
+
+    const staticMatch = problems.find((problem) => problem.title === roomConfig.problem);
+    return staticMatch ? `static:${staticMatch.id}` : "";
+  }, [roomConfig.customProblem, roomConfig.problem, problems]);
 
   const handleGenerate = () => {
     if (!topic.trim()) return;
@@ -26,22 +57,40 @@ function CreateSessionModal({
           const generatedProblem = data?.problem;
           if (!generatedProblem) return;
 
+          const problemWithId = {
+            ...generatedProblem,
+            id: generatedProblem.id || `ai-${Date.now()}`,
+          };
+
+          const nextGeneratedProblems = [
+            problemWithId,
+            ...generatedProblems.filter((item) => item.id !== problemWithId.id),
+          ].slice(0, 30);
+
+          setGeneratedProblems(nextGeneratedProblems);
+          localStorage.setItem(GENERATED_PROBLEMS_KEY, JSON.stringify(nextGeneratedProblems));
+
           setRoomConfig({
-            problem: generatedProblem.title,
-            difficulty: generatedProblem.difficulty,
-            customProblem: generatedProblem,
+            problem: problemWithId.title,
+            difficulty: problemWithId.difficulty,
+            customProblem: problemWithId,
           });
         },
       }
     );
   };
 
-  const handleSelectProblem = (problemTitle) => {
-    const selectedProblem = problems.find((problem) => problem.title === problemTitle);
+  const handleSelectProblem = (optionValue) => {
+    if (!optionValue) return;
+
+    const [source, id] = optionValue.split(":");
+    const selectedProblem = allProblems.find((problem) => problem.source === source && problem.id === id);
+    if (!selectedProblem) return;
+
     setRoomConfig({
-      problem: problemTitle,
+      problem: selectedProblem.title,
       difficulty: selectedProblem?.difficulty || roomConfig.difficulty,
-      customProblem: null,
+      customProblem: source === "ai" ? selectedProblem : null,
     });
   };
 
@@ -107,7 +156,7 @@ function CreateSessionModal({
                   ? "w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
                   : "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900"
               }
-              value={roomConfig.problem}
+              value={selectedOptionValue}
               onChange={(e) => {
                 handleSelectProblem(e.target.value);
               }}
@@ -116,11 +165,23 @@ function CreateSessionModal({
                 Choose a coding problem...
               </option>
 
-              {problems.map((problem) => (
-                <option key={problem.id} value={problem.title}>
-                  {problem.title} ({problem.difficulty})
-                </option>
-              ))}
+              {generatedProblems.length > 0 && (
+                <optgroup label="AI Generated">
+                  {generatedProblems.map((problem) => (
+                    <option key={problem.id} value={`ai:${problem.id}`}>
+                      {problem.title} ({problem.difficulty})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+
+              <optgroup label="Curated">
+                {problems.map((problem) => (
+                  <option key={problem.id} value={`static:${problem.id}`}>
+                    {problem.title} ({problem.difficulty})
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
 

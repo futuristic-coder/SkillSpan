@@ -72,6 +72,32 @@ button:not(:disabled),
   min-height: 2.5rem;
 }
 
+.session-self-preview .str-video__participant-view {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border-radius: 0;
+}
+
+.session-video-ui--light .str-video__notification {
+  --str-video__background-color1: #ffffff;
+  --str-video__text-color1: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 8px 24px -14px rgba(15, 23, 42, 0.35);
+}
+
+.session-video-ui--light .str-video__notification .str-video__notification__message {
+  color: #334155;
+  font-weight: 600;
+}
+
+.session-video-ui--dark .str-video__notification {
+  --str-video__background-color1: #0f172a;
+  --str-video__text-color1: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
 .session-call-controls {
   overflow: visible;
 }
@@ -83,34 +109,60 @@ button:not(:disabled),
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  align-content: center;
   gap: 0.5rem;
   max-width: 100%;
 }
 
-.session-call-controls .str-video__call-controls button,
-.session-call-controls .str-video__call-controls .str-video__composite-button {
+.session-call-controls .str-video__call-controls > button,
+.session-call-controls .str-video__call-controls > .str-video__composite-button {
   min-width: 2.5rem;
   min-height: 2.5rem;
+  margin: 0;
+  flex: 0 0 auto;
   pointer-events: auto;
 }
 
-.session-call-controls .str-video__call-controls button,
-.session-call-controls .str-video__call-controls .str-video__composite-button button {
+.session-call-controls--dark .str-video__call-controls > button,
+.session-call-controls--dark .str-video__call-controls > .str-video__composite-button {
   border: 1px solid rgba(100, 116, 139, 0.45);
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(30, 41, 59, 0.92);
   color: #f8fafc;
 }
 
-.session-call-controls .str-video__call-controls button:hover,
-.session-call-controls .str-video__call-controls .str-video__composite-button button:hover {
-  background: rgba(30, 41, 59, 0.95);
+.session-call-controls--light .str-video__call-controls > button,
+.session-call-controls--light .str-video__call-controls > .str-video__composite-button {
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #ffffff;
+  color: #1e293b;
 }
 
-.session-call-controls .str-video__call-controls [aria-label*="leave" i],
-.session-call-controls .str-video__call-controls [data-testid*="leave" i] {
-  background: rgba(190, 24, 93, 0.92) !important;
-  border-color: rgba(244, 114, 182, 0.8) !important;
-  color: #fff !important;
+.session-call-controls .str-video__call-controls > button:hover,
+.session-call-controls .str-video__call-controls > .str-video__composite-button:hover {
+  transform: translateY(-1px);
+}
+
+.session-call-controls--light .str-video__end-call__leave,
+.session-call-controls--light .str-video__end-call__end,
+.session-call-controls--light .str-video__call-controls__button--variant-danger {
+  background: #e11d48 !important;
+  border-color: #fb7185 !important;
+  color: #ffffff !important;
+}
+
+.session-call-controls--dark .str-video__end-call__leave,
+.session-call-controls--dark .str-video__end-call__end,
+.session-call-controls--dark .str-video__call-controls__button--variant-danger {
+  background: #be123c !important;
+  border-color: #fb7185 !important;
+  color: #ffffff !important;
+}
+
+.session-call-controls .str-video__end-call__leave:hover,
+.session-call-controls .str-video__end-call__end:hover,
+.session-call-controls .str-video__call-controls__button--variant-danger:hover {
+  background: #e11d48 !important;
+  border-color: #fb7185 !important;
 }
 
 .session-call-controls .str-video__call-controls [aria-label*="record" i],
@@ -130,21 +182,50 @@ button:not(:disabled),
     border-top-right-radius: 1rem;
   }
 
+  .session-chat-panel .session-chat-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  .session-chat-panel .session-chat-body {
+    min-height: 0;
+    height: calc(100% - 56px);
+  }
+
+  .session-chat-panel .str-chat__main-panel {
+    min-height: 0;
+  }
+
   .session-chat-panel .str-chat__list {
     padding-inline: 0.4rem;
+    padding-bottom: 0.4rem;
   }
 
   .session-chat-panel .str-chat__message-input {
     padding: 0.4rem;
+    padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+  }
+
+  .session-chat-panel .str-chat__message-textarea-container textarea {
+    min-height: 2.25rem;
   }
 
   .session-call-controls .str-video__call-controls {
     gap: 0.4rem;
   }
 
-  .session-call-controls .str-video__call-controls button,
-  .session-call-controls .str-video__call-controls .str-video__composite-button {
+  .session-call-controls .str-video__call-controls > button,
+  .session-call-controls .str-video__call-controls > .str-video__composite-button {
     min-width: 2.25rem;
     min-height: 2.25rem;
   }
+}
+
+.session-call-controls .str-video__end-call__leave-icon,
+.session-call-controls .str-video__end-call__end-icon,
+.session-call-controls .str-video__call-controls__button--variant-danger .str-video__icon {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
 }
