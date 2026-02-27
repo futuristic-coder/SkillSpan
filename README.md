@@ -194,4 +194,5 @@ npm run dev
 
 ## 🔗 Repository
 
-- GitHub: https://github.com/futuristic-coder/Talent-Bridge
+- GitHub: https://github.com/futuristic-coder/SkillSpan
+  
